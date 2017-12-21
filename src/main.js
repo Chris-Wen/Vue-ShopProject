@@ -6,9 +6,10 @@ import router from './router'
 
 import axios from 'axios'
 import Vuex from 'vuex'
-import store from './comm/store'
+import store from './vuex/store'
 
 import 'lib-flexible'
+import './assets/css/reset.css'
 
 Vue.use(Vuex)
 
@@ -20,6 +21,7 @@ Vue.config.productionTip = false
 new Vue({
   el: '#app',
   router,
+  store,
   template: '<App/>',
   components: { App }
 })

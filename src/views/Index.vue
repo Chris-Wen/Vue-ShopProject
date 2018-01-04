@@ -17,16 +17,21 @@ export default {
     data(){
         return{
             title:'商城首页',
-            showUserIcon:true
+            showIcon:true,
+            icon:'icon-user'
         }
     },
     methods:{
-        setTitle(){
-            this.$store.commit('newTitle',this.title)
+        setHeaderInfo(){
+            this.$store.commit('newTitle',this.title);
+            this.$store.commit('changeIconState',[this.showIcon,this.icon]);
+        },
+        headerJump(){
+            console.log('jump to personal page')
         }
     },
     mounted(){
-        this.setTitle();
+        this.setHeaderInfo();
     },
     computed:{
         
@@ -37,8 +42,9 @@ export default {
 
 <style lang="scss" scoped>
 .index-box{
+    box-sizing: border-box;
+    width: 100%;
     
-
 
 
 }

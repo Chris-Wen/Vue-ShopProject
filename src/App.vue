@@ -31,7 +31,7 @@ export default {
   color: black;
   margin-top: 100px;
   width: 100%;
-  
+  min-height: 100%;
 }
 
 

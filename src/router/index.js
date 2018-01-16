@@ -4,6 +4,7 @@ import HelloWorld from '@/components/HelloWorld'
 import Index from '@/views/Index'
 import Login from '@/views/Login'
 import Personal from '@/views/Personal'
+import List from '@/views/List'
 
 
 
@@ -27,6 +28,10 @@ export default new Router({
     {
       path:'/personal',
       component: Personal
+    },
+    {
+      path:'/list',
+      component: List
     }
   ]
 })

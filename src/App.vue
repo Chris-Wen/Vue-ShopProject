@@ -2,12 +2,7 @@
   <div id="app">
     <HeaderDiv/>    
     <router-view/>
-    <p>字体大小测试</p>
-    <ul>
-      <li>1</li>
-      <li>2</li>
-      <li>3</li>
-    </ul>
+    <p>主页 app.vue 字体  字体大小测试</p>
   </div>
 </template>
 

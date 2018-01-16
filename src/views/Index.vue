@@ -16,18 +16,16 @@
 export default {
     data(){
         return{
-            title:'商城首页',
+            title:'积分商城',
             showIcon:true,
-            icon:'icon-user'
+            icon:'fa fa-user-circle-o fa-lg',
+            link:'/personal'
         }
     },
     methods:{
         setHeaderInfo(){
             this.$store.commit('newTitle',this.title);
-            this.$store.commit('changeIconState',[this.showIcon,this.icon]);
-        },
-        headerJump(){
-            console.log('jump to personal page')
+            this.$store.commit('changeIconState',[this.showIcon,this.icon,this.link]);
         }
     },
     mounted(){

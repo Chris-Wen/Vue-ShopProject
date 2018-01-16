@@ -3,19 +3,17 @@
 		{{ title }}
 		<div class="icon">
 			<a href="javascript:history.go(-1);" >
-				<i class="icon-return"></i>
+				<i class="fa fa-angle-left fa-2x"></i>
 			</a>
-			
-			<a v-if="showIcon" :class="[icon]" @click="headerJump">
-				<i></i>
-			</a>
-			<!-- <a v-if="showUserServeIcon" class="icon-user-serve"><i></i></a>
-			<a v-if="showUserIcon" class="icon-user"><i></i></a> -->
+			<router-link :to="link" v-if="showIcon" >
+				<i :class="[icon]"></i>
+			</router-link>
 		</div>
 	</header>
 </template>
 
 <script>
+import 'font-awesome/css/font-awesome.css'
 
 export default {
 	name: 'HeaderDiv',
@@ -23,12 +21,10 @@ export default {
 		return{}
 	},
 	methods:{
-	 	headerJump(){
-			 console.log('jump')
-		 }
+
 	},
 	computed: {
-		//store.js 中state决定 title,showCartIcon,showUserIcon的值
+		//store.js 中state决定 title,icon的值
 		title(){
 			return this.$store.state.headerTitle
 		},
@@ -38,6 +34,9 @@ export default {
 		},
 		icon(){
 			return this.$store.state.icon
+		},
+		link(){
+			return this.$store.state.link
 		}
 	}
 }
@@ -52,46 +51,29 @@ header{
 	top: 0;
 	width:100%;
 	height:100px;
-	background: #fff;
 	overflow: hidden;
 	line-height:100px;
-	font-size: 45px;
-	border-bottom: 1px solid #ccc;
+	font-size: 40px;
 	text-align: center;
+	color:white;
+	background: -webkit-linear-gradient(left, #31070a, black); 
+    background: -o-linear-gradient(right, #31070a, black); 
+    background: -moz-linear-gradient(right, #31070a, black); 
+    background: linear-gradient(to right, #31070a, black);
 	.icon{
 		position: absolute;
 		z-index: 100;
 		top: 0;
 		width: 100%;
 		height: 100px;
-		a {
+		a ,router-link{
 			padding:0 20px;
 			float: right;
-			i {
-				display: inline-block;
-				width: 45px;
-				height: 45px;
-			}
-			.icon-return{
-				background: url(../assets/img/return_icon.png) no-repeat;
-				background-size: 100%;
-			}
+			i { color:white }
 		}
 		a:first-child{
 			float: left;
 		}
-		.icon-cart {
-			i{
-				background: url(../assets/img/cart_icon.png) no-repeat;
-				background-size: 100%;
-			}
-		}
-		.icon-user {
-			i{
-				background: url(../assets/img/user_icon.png) no-repeat;
-				background-size: 100%;
-			}
-		}	
 	}
 }
 </style>

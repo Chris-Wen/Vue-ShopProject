@@ -13,6 +13,11 @@ import './assets/css/reset.css'
 
 Vue.use(Vuex)
 
+axios.defaults.baseURL = 'http://community.73776.com/index.php/shop/WebShop'
+// axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
+// axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+
+
 Vue.prototype.$ajax = axios
 
 Vue.config.productionTip = false

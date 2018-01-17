@@ -34,7 +34,39 @@
 import 'font-awesome/css/font-awesome.css'
 
 export default {
-    
+    name:'goods-list',
+    data(){
+        return {
+
+        }
+    },
+    methods:{
+        getGoodsList(type,rule, page=1 ){
+            this.$ajax.get('/getbanner').then( response=>{
+                console.log(response);
+            }).catch( error=>{ 
+                console.log(error)
+            })
+        },
+        getGoodsLists(type,rule, page=1 ){
+            this.$ajax({
+                method:'post',
+                url:'/getgoods',
+                data:{ type,rule, page }
+            })
+            .then( response=>{
+                console.log(response);
+            }).catch( error=>{ 
+                console.log(error)
+            })
+        }
+    },
+    created(){
+        this.getGoodsList()
+        this.getGoodsLists()
+    }
+
+
 }
 </script>
 

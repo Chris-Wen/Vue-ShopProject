@@ -1,93 +1,150 @@
 <template>
     <div class="container">
-        <div class="mask"></div>
+        <div class="mask" v-show="isOption" @click="showMenu()"></div>
 		<div class="select-box">
-			<a href="javascript:;">调整排序&nbsp;&nbsp;<i class="fa fa-angle-down fa-lg"></i></a>
+			<span @click="showMenu()">调整排序&nbsp;&nbsp;<i class="fa fa-angle-down fa-lg"></i></span>
 		</div>
-		<ul class="pop-options" data-pop="options" style="display:none">
-			<li>积分由低到高 <i class="fa fa-check icon-check"></i> </li>
-			<li>价格由低到高 <i></i></li>
-			<li>价格由高到低 <i></i></li>
-			<li>积分由高到低 <i></i></li>
+		<ul class="pop-options" data-pop="options" v-show="isOption">
+            <li v-for="(value,key) in ruleList" :key="key"  @click="changeRule( key+1 )">
+                {{value}}
+                <i v-bind:class="{'fa fa-check fa-1x icon-check' : (rule==key+1) }"></i>
+            </li>
 		</ul>
-		
-		<ul class="goods-list" id="list" data-page="1" >
-			<li>
-				<dl class="goods-item flex-between">
-					<dt> 
-						<a href="#">
-							<img src="" alt="">
-						</a>
-					</dt>
+		<ul class="goods-list" id="list">
+			<router-link tag="li" v-for="(value,key) in list" :key='key'  :to="'/details/'+value.pid" :event="['mousedown', 'touchstart']">
+				<dl class="goods-item flex-between" >
+					<dt> <img :src=" preSrc + value.logo " alt=""></dt>
 					<dd class="goods-cont">
-						<h3>商品标题商品标题商</h3>
-						<p class="score"> <span><i></i>积分 </span> <span class="goods-score">9999</span>+ <span class="goods-price">888</span> 元</p>
-						<p>市场参考价：xxxx元 </p>
+						<h3>{{value.sname}}</h3>
+						<p class="score"> 
+                            <span><i></i>积分 </span> <span class="goods-score">{{value.score}}</span>
+                            <i v-if=" value.price && parseInt(value.price)>0 ">+</i>
+                            <span  v-if=" value.price && parseInt(value.price)>0 " class="goods-price">
+                                <b>￥</b> {{value.price}}
+                            </span>
+                        </p>
+						<p>市场参考价：{{value.realprice}}元 </p>
 					</dd>
 				</dl>
-			</li>
+			</router-link>
 		</ul>
     </div>
 </template>
 
 <script>
 import 'font-awesome/css/font-awesome.css'
+import qs from 'qs'
 
 export default {
-    
+    name:'goodsList',
+    data(){
+        return {
+            type:'',
+            rule:'',
+            page:1,
+            totalPage:'',
+            list:[],
+            isOption: false,
+            check:'fa fa-check icon-check',
+            ruleList:['积分由低到高','价格由低到高','价格由高到低','积分由高到低'],
+            preSrc:'http://221.123.178.232/smallgamesdk/Public/Uploads/'
+        }
+    },
+    methods:{
+        getGoodsList( ) {
+            this.axios({
+                    method: 'post',
+                    url:'/getgoods',
+                    data: qs.stringify({
+                            type: this.type,
+                            rule: this.rule,
+                            page: this.page
+                        })
+                })
+                .then(response=>{
+                    if (response.data.code=200) {
+                        this.list = response.data.list
+                        this.totalPage = response.data.totalPage
+                    }
+                }).catch(error=>{
+                    console.log(error)
+                })
+        },
+        jumpToDetail(link){
+            console.log(link)
+            console.log(this.$router)
+        },
+        changeRule(index){
+            this.rule = index;
+            this.isOption = !this.isOption;
+            this.getGoodsList();
+        },
+        showMenu(){ this.isOption = !this.isOption }
+    },
+    mounted(){
+        this.getGoodsList()
+    },
 }
 </script>
 
 <style lang="scss" scoped>
 .container{
+    margin-bottom: .5rem;
     .mask{
         z-index: 50;   position: absolute;      width: 100%;height: 100%;
-        background-color: white;opacity: .1;  display: none;
+        background-color: white;opacity: .1; 
     }
     .select-box{ 
-        width: 100%; height: 100px; line-height: 100px; text-align: right; vertical-align: middle ;font-size:35px;
-        a{ padding: .25rem 1rem .25rem 0; color: #8d8d8d }
+        width: 100%; height: 100px; line-height: 100px; text-align: right; vertical-align: middle ;font-size:33px;
+        span{ padding: .25rem 1rem .25rem 0; color: #8d8d8d }
     }
     .pop-options{
-        background-color: #fff; color: #8d8d8d; width: 6rem; position: absolute;
-        top: 2.25rem; right: .4rem; z-index: 60; border-top:0; 
+        background-color: #fff; color: #8d8d8d; width: 400px; position: absolute;
+        top: 200px; right: 30px; z-index: 60; border-top:0; text-align: left;  
         box-shadow:-3px 0 10px #888, 3px 0 10px #888, 0 -3px 0px white, 3px 0 10px #888;
-        .icon-check{ color: orange; float: right; margin: .2rem .7rem 0 0; font-size: 18px }
+        li{ 
+            height: 1rem; line-height: 1rem;  border-bottom: 1px solid #999; padding-left: 90px;
+            .icon-check{ color: orange; float: right; margin: 20px 40px 0 0; font-size: 35px}
+        }
+        li:last-child{ border:0 }
     }
     .goods-list{ 
         width: 100%; box-sizing: border-box;
         li{ 
             background-color: #fff; 
-            margin-bottom: .12rem; 
-            padding: .2rem .8rem;
+            margin-bottom: 8px; 
+            padding: 10px 60px;
             dl.goods-item{ 
                 align-items: center; 
+                text-align: left;
                 width: 100% ;
                 dt{ 
-                    display: inline-block; width: 25%; min-height: 2.5rem;
+                    display: inline-block; width: 25%; min-height: 2.5rem; 
                     img{ width: 1.8rem; margin-top: .3rem; border-radius: 10px }
                 }
                 dd.goods-cont{ 
-                    display: inline-block; width: 70%;
-                    h3{ width: 100%; overflow: hidden;text-overflow: ellipsis; white-space: nowrap  }
+                    display: inline-block; width: 65%; 
+                    h3{ width: 100%; overflow: hidden;text-overflow: ellipsis; white-space: nowrap;  }
                     .score{ 
-                        font-size: 18px; color:red; margin-top: .2rem;
-                        span:first-child{font-size: 12px;color: #ff901c; margin-right: .2rem }
-                        i{
-                            display: inline-block;
-                            // background: url(../images/icon_zd.jpg) no-repeat;
-                            background-size: .392157rem .392157rem;
-                            width: .43rem;
-                            height: .43rem;
-                            margin-bottom: -.08rem;
+                        font-size: 35px; color:red; margin: 15px 0;
+                        span:first-child{
+                            font-size: 20px;color: #ff901c; margin-right: 5px
+                            i{
+                                display: inline-block;
+                                background: url('../assets/images/icon_zd.jpg') no-repeat;
+                                background-size: 28px 28px;
+                                width: 30px;
+                                height: 30px;
+                                margin-bottom: -.08rem;
+                            }
                         }
-                        .goods-score{ margin-right: .2rem; color: #ff901c }
+                        .goods-score{ margin-right: 5px; color: #ff901c }
                         .goods-price{ 
                             color: red;
-                            b{ font-size: 14px }
+                            b{ font-size: 25px }
                         }
                     }
-                    p:last-child{ color: #666; font-size: 12px }
+                    p:last-child{ color: #666; font-size: 28px }
                 }
             }
         }

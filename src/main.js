@@ -7,13 +7,17 @@ import router from './router'
 import axios from 'axios'
 import Vuex from 'vuex'
 import store from './vuex/store'
+import qs from 'qs'
 
 import 'lib-flexible'
 import './assets/css/reset.css'
 
 Vue.use(Vuex)
 
-Vue.prototype.$ajax = axios
+axios.defaults.baseURL = 'http://community.73776.com/index.php/shop/WebShop'
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+
+Vue.prototype.axios = axios
 
 Vue.config.productionTip = false
 

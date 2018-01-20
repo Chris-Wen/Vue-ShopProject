@@ -5,6 +5,7 @@ import Index from '@/views/Index'
 import Login from '@/views/Login'
 import Personal from '@/views/Personal'
 import List from '@/views/List'
+import Details from '@/views/Details'
 
 
 
@@ -32,6 +33,10 @@ export default new Router({
     {
       path:'/list',
       component: List
+    },
+    {
+      path:'/details/:pid',
+      component: Details
     }
   ]
 })

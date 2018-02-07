@@ -46,8 +46,7 @@ export default {
             list:[],
             isOption: false,
             check:'fa fa-check icon-check',
-            ruleList:['积分由低到高','价格由低到高','价格由高到低','积分由高到低'],
-            preSrc:'http://221.123.178.232/smallgamesdk/Public/Uploads/'
+            ruleList:['积分由低到高','价格由低到高','价格由高到低','积分由高到低']
         }
     },
     methods:{

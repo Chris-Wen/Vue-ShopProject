@@ -3,7 +3,6 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
-const preSrc = 'http://221.123.178.232/smallgamesdk/Public/Uploads/';
 
   // 定义状态
 const  state = {
@@ -26,7 +25,6 @@ const mutations = {
 }
 
 export default new Vuex.Store({
-	preSrc,
 	state,
 	mutations
 })

@@ -25,17 +25,17 @@
 			</div>
 		</div>
 		<!--商品展示-->
-		<div class="goods-info">
+		<section class="goods-info">
 			<div class="info-title">
 				<span>物品详情</span> 
 				<p class="dotted">·······················································</p>
 			</div>
 			<ul id="productInfo">
-				<li>品名：{{details.sub_name}}</li>
-				<li>品牌：{{details.pname}}</li>
-				<li>详情：{{details.desc}} </li>
+				<li><i>品名：</i>{{details.sub_name}}</li>
+				<li><i>品牌：</i>{{details.pname}}</li>
+				<li><i>详情：</i>{{details.desc}} </li>
 			</ul>
-		</div>
+		</section>
     </div>
 </template>
 
@@ -44,10 +44,10 @@ export default {
     name:'detail',
     data(){
         return{
+            title:'商品详情',
             isPop: false,
             pid:'',
-            details:'',
-            preSrc:'http://221.123.178.232/smallgamesdk/Public/Uploads/'
+            details:''
         }
     },
     methods:{
@@ -58,7 +58,7 @@ export default {
                             console.log('服务器暂无数据')
                         } else {
                             this.details = res.data[0]
-                            console.log(this.details)
+                            // console.log(this.details)
                         }
                     }).catch( err=>{
                         console.log(err)
@@ -83,7 +83,6 @@ export default {
         margin-top:	 1.2rem;
         width: 100%;
         height: auto;
-        // font-size: 30px;
         .goods-show{
             overflow: hidden;
             background: #fff;
@@ -159,64 +158,60 @@ export default {
     //     text-align: center;
     //     color:white;
     // }
-    // /* 商品信息 */
-    // .goods-info{
-    //     width: 100%;
-    //     font-size: 14px;
-    //     box-sizing: border-box;
-    // }
-    // .goods-info .dotted{
-    //     height: .941176rem;
-    //     line-height: .941176rem;
-    //     width: 85%;
-    //     color:black;
-    //     letter-spacing:2px;
-    //     overflow:hidden;
-    //     text-overflow:clip;
-    //     margin:0 auto;
-    //     font-size: 20px;
-    // }
-    // .info-title{
-    //     box-sizing: border-box;
-    //     position: relative;
-    //     width: 100%;
-    //     height: .941176rem;
-    //     font-size: 16px	;
-    //     text-align: center;
-    // }
-    // .info-title>span{
-    //     color:#888;
-    //     display: block;
-    //     width:3rem;
-    //     line-height: .941176rem;
-    //     position: absolute;
-    //     box-sizing: border-box;
-    //     margin: 0 auto;
-    //     top: 0;
-    //     left: 0;
-    //     right: 0;
-    //     background-color: #ebebeb;
-    //     z-index: 10;
-    // }
-    // .goods-info ul{
-    //     box-sizing: border-box;
-    //     background-color: #fff;
-    //     width: 100%;
-    //     padding: .5rem;
-    //     font-size: 16px;
-    // }
-    // .goods-info ul li{
-    //     width: 100%;
-    //     line-height: .54902rem;
-    //     text-align: justify;
-    //     margin: .156863rem 0;	
-    //     font-size: 14px;
-    //     color:#666;
-    // }
-    // .goods-info ul li i{
-    //     font-size: 16px;
-    //     color:black;
-    // }
-
+    /* 商品信息 */
+    section{
+        width: 100%;
+        box-sizing: border-box;
+        .info-title{
+            position: relative;
+            width: 100%;
+            height: .941176rem;
+            font-size: 35px	;
+            text-align: center;
+            span{
+                color:#888;
+                display: block;
+                width:3rem;
+                line-height: .941176rem;
+                position: absolute;
+                box-sizing: border-box;
+                margin: 0 auto;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #ebebeb;
+                z-index: 10;
+            }
+            .dotted{
+                height: .941176rem;
+                line-height: .941176rem;
+                width: 85%;
+                color:black;
+                letter-spacing:2px;
+                overflow:hidden;
+                text-overflow:clip;
+                margin:0 auto;
+                font-size: 38px;
+            }
+        }
+        ul{
+            box-sizing: border-box;
+            background-color: #fff;
+            width: 100%;
+            padding: .5rem;
+            li{
+                width: 100%;
+                line-height: .54902rem;
+                text-align: justify;
+                margin: .156863rem 0;	
+                color:#666;
+                i{
+                    text-decoration: none;
+                    font-size: 30px;
+                    color:black;
+                }
+            }
+        }
+    }
 }
 </style>

@@ -1,0 +1,1 @@
+export const HEADER_MUTATION = 'HEADER_MUTATION'

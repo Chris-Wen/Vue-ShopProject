@@ -14,6 +14,7 @@
 
 <script>
 import 'font-awesome/css/font-awesome.css'
+import { mapState } from 'vuex'
 
 export default {
 	name: 'HeaderDiv',
@@ -24,20 +25,12 @@ export default {
 
 	},
 	computed: {
-		//store.js 中state决定 title,icon的值
-		title(){
-			return this.$store.state.headerTitle
-		},
-		showIcon(){
-			// console.log(this.$store.state)			
-			return this.$store.state.showIcon
-		},
-		icon(){
-			return this.$store.state.icon
-		},
-		link(){
-			return this.$store.state.link
-		}
+		//store.js 中state决定 title,icon的值  使用mapState函数简化， 函数名与变量名相同时，简写为字符串
+		// 当映射的计算属性的名称与 state 的子节点名称相同时，我们也可以给 mapState 传一个字符串数组。
+		// title(){			
+			// 	return this.$store.state.title
+		// },	
+		...mapState([ 'title', 'showIcon', 'icon', 'link'])
 	}
 }
 </script>
@@ -66,7 +59,7 @@ header{
 		top: 0;
 		width: 100%;
 		height: 100px;
-		a ,router-link{
+		a{
 			padding:0 20px;
 			float: right;
 			i { color:white }

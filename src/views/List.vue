@@ -34,11 +34,16 @@
 <script>
 import 'font-awesome/css/font-awesome.css'
 import qs from 'qs'
+import { mapActions } from 'vuex'
 
 export default {
     name:'goodsList',
     data(){
         return {
+            titleInfo : {
+                title:'商品详情',
+                showIcon: false
+            },
             type:'',
             rule:'',
             page:1,
@@ -50,6 +55,9 @@ export default {
         }
     },
     methods:{
+        //更改页头信息
+        ...mapActions([ 'handleTitle' ]),
+        //axios 获取列表数据
         getGoodsList( ) {
             this.axios({
                     method: 'post',
@@ -81,8 +89,15 @@ export default {
         showMenu(){ this.isOption = !this.isOption }
     },
     mounted(){
-        this.getGoodsList()
+        this.handleTitle({ 
+            title: this.titleInfo.title,
+            showIcon: this.titleInfo.showIcon
+        })
+        this.getGoodsList();
     },
+    computed:{
+
+    }
 }
 </script>
 

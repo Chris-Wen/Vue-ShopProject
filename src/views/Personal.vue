@@ -5,23 +5,27 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
     name: 'personal',
     data(){
         return {
-            title:'个人中心',
-            showIcon:false,
-            icon:''
+            titleInfo: {
+                title:'个人中心',
+                showIcon:false
+            }
+            
         }
     },
     methods:{
-        setHeaderInfo(){
-            this.$store.commit('newTitle',this.title);
-            this.$store.commit('changeIconState',[this.showIcon,this.icon]);
-        }
+        ...mapActions(['handleTitle']),
     },
     mounted(){
-        this.setHeaderInfo()
+        this.handleTitle({
+            title: this.titleInfo.title,
+            showIcon: this.titleInfo.showIcon
+        })
     }
 }
 </script>

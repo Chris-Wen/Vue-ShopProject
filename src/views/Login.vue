@@ -9,23 +9,27 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
     name:'Login',
     data(){
         return{
-            title:'登录注册',
-            showIcon:false,
-            icon:''
+            titleInfo: {
+                title:'登录注册',
+                showIcon:false
+            }
+            
         }
     },
     methods:{
-        setTitle(){
-            this.$store.commit( "newTitle",this.title )
-            this.$store.commit( 'changeIconState',[this.showIcon,this.icon] )
-        }
+        ...mapActions( ['handleTitle'] ),
     },
     mounted(){
-        this.setTitle();
+        this.handleTitle({
+            title:  this.titleInfo.title,
+            showIcon: this.titleInfo.showIcon
+        })
     }
 }
 </script>

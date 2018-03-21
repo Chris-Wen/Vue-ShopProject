@@ -40,17 +40,25 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
     name:'detail',
     data(){
         return{
-            title:'商品详情',
+            titleInfo: {
+                title:'商品详情',
+                showIcon: true,
+                icon: 'fa fa-shopping-cart fa-lg',
+                link: '/cart'
+            },
             isPop: false,
             pid:'',
             details:''
         }
     },
     methods:{
+        ...mapActions(['handleTitle']),
         getGoodsDetails(){
             this.axios.get( '/getGoodsDetails?pid=' + this.$route.params.pid)
                     .then( res=>{
@@ -60,13 +68,19 @@ export default {
                             this.details = res.data[0]
                             // console.log(this.details)
                         }
-                    }).catch( err=>{
+                    }).catch( err =>{
                         console.log(err)
                     })
         },
         showMask(){ this.isPop = !this.isPop },
     },
     mounted(){
+        this.handleTitle({
+            title:  this.titleInfo.title,
+            showIcon: this.titleInfo.showIcon,
+            icon:   this.titleInfo.icon,
+            link:   this.titleInfo.link
+        })
         this.pid = parseInt(this.$route.params.pid)
         this.getGoodsDetails()
     }

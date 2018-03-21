@@ -30,7 +30,13 @@ export default {
 		// title(){			
 			// 	return this.$store.state.title
 		// },	
-		...mapState([ 'title', 'showIcon', 'icon', 'link'])
+		// ...mapState([ 'title', 'showIcon', 'icon', 'link']),
+		...mapState({
+			title: 		state => state.titleGroup.title ,
+			showIcon: 	state => state.titleGroup.showIcon ,
+			icon: 		state => state.titleGroup.icon ,
+			link: 		state => state.titleGroup.link
+		})
 	}
 }
 </script>

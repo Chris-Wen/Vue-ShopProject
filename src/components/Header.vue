@@ -68,11 +68,12 @@ header{
 		a{
 			padding:0 20px;
 			float: right;
-			i { color:white }
+			i { 
+				color:white; 
+				vertical-align: middle 
+			}
 		}
-		a:first-child{
-			float: left;
-		}
+		a:first-child{  float: left;}
 	}
 }
 </style>

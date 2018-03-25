@@ -1,0 +1,8 @@
+.btn-grad {
+    text-align: center;
+    color:white;
+    background: -webkit-linear-gradient(left, #FFC50C, #FF6516); 
+    background: -o-linear-gradient(right, #FFC50C, #FF6516); 
+    background: -moz-linear-gradient(right, #FFC50C, #FF6516); 
+    background: linear-gradient(to right, #FFC50C, #FF6516);
+}

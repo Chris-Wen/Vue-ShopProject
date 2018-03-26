@@ -9,9 +9,12 @@ import Vuex from 'vuex'
 import store from './vuex/store'
 import qs from 'qs'
 
+import Cube from 'cube-ui'
+
 import 'lib-flexible'
 import './assets/css/reset.css'
 
+Vue.use(Cube)
 Vue.use(Vuex)
 
 axios.defaults.baseURL = 'http://community.73776.com/index.php/shop/WebShop'

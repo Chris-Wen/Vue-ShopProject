@@ -3,6 +3,7 @@
         <div class="top">
             <img src="../assets/images/user.jpg" alt="">
         </div>
+        <cube-popup type="login-popup" ref="myPopup" :mask="false" :content="popMsg" />
         <form @submit.prevent>
             <ul>
                 <li>
@@ -37,7 +38,7 @@
 
 <script>
 import { mapActions } from 'vuex'
-
+import qs from 'qs'
 export default {
     name:'Login',
     data(){
@@ -49,10 +50,11 @@ export default {
             isRegisterPartShow: false,
             uname: '',  upwd: '',  cpwd: '',  code: '',
             methodHandleable: true,
+            popMsg: '',
             clearable: true,
             eye: { open: false },
             vali: false,
-            valid: true,
+            valid: false,
             valid1: false,
             rule1: {
                 required: true,
@@ -97,22 +99,37 @@ export default {
     },
     methods:{
         ...mapActions( ['handleTitle'] ),
+        showPopup(refId, msg) {
+            this.popMsg = msg;
+            const component = this.$refs[refId];
+            component.show()
+            setTimeout(() => {
+                component.hide()
+            }, 2000)
+        },
         handleLogin() {
             if ( this.isRegisterPartShow == true ) {
                 this.valid1 = false;
                 this.isRegisterPartShow = false; 
                 return ;
             }
-            if ( !this.methodHandleable ) return;
+            if ( !this.uname ) {
+                this.showPopup('myPopup', '请输入用户名');
+                return;
+            }
+            if ( !this.upwd ) {
+                this.showPopup('myPopup', '请输入密码');
+                return;
+            }
             this.axios({
                 type:'POST',
                 url:'/login',
-                data: {
+                data: qs.stringify({
                     uname: this.uname,
                     upwd: this.upwd
-                }
+                })
             }).then( response => {
-
+                console.log(response)
             })
         },
         handleRegister() {
@@ -122,17 +139,23 @@ export default {
                 return ;
             }
             if ( !this.methodHandleable ) return;
-            this.axios({
-                type:'POST',
-                url:'/register',
-                data: {
+            console.log(qs.stringify({
                     uname: this.uname,
                     upwd: this.uwpd,
                     cpwd: this.cpwd,
                     code: this.code
-                }
+                }))
+            this.axios({
+                type:'POST',
+                url:'/register',
+                data: qs.stringify({
+                    uname: this.uname,
+                    upwd: this.uwpd,
+                    cpwd: this.cpwd,
+                    code: this.code
+                })
             }).then( response => {
-
+                console.log(response)
             })
         },
         
@@ -161,7 +184,7 @@ export default {
         padding-top: 100px;
         ul li.code {
             text-align: left;
-            /deep/ .cube-validator {
+            /deep/ .cube-validator {            //深度作用选择器   /deep/为 >>> 的别名，在sass中使用
                 display: inline-block;
                 width: 45%;
                 text-align: center;
@@ -170,10 +193,10 @@ export default {
         }
         ul li {
             min-height: 130px;
-            /deep/ .cube-input input { height: 80px; text-indent: 1em }   //深度作用选择器   /deep/为 >>> 的别名，在sass中使用
+            /deep/ .cube-input input { height: 80px; text-indent: 1em; font-size: 2em; }   
             /deep/ i { transform: scale(1.8) }
             p {
-               width: 100%;
+                width: 100%;
                 text-align: center;
                 height: 60px;
                 line-height: 60px; 

@@ -1,5 +1,6 @@
 <template>
-    <div class="index-box">
+    <div class="container">
+        <banner />
         <ul>
             <li>这是主页</li>
             <li>这是主页</li>
@@ -14,6 +15,7 @@
 <script>
 //mapActions   即为升级版 mapMutations， 一般只需引入mapActions即可
 import { mapMutations, mapActions } from 'vuex'
+import Banner from '../components/Banner'
 
 export default {
     data(){
@@ -27,6 +29,7 @@ export default {
             
         }
     },
+    components:{ Banner },
     methods:{
         // handleTitle(){         <=>   ...mapMutations([ 'handleTitle' ])
         //     this.$store.commit( 'handleTitle' ,{ ... });

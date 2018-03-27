@@ -1,6 +1,6 @@
 <template>
   <div class="banner">
-      this is banner image
+      <cube-slide :data="items"/>
   </div>
 </template>
 
@@ -9,7 +9,9 @@ export default {
     name:'Banner',
     data(){
         return {
-            
+            items: [
+                { }
+            ]
         }
     }
 }

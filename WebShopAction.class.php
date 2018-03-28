@@ -94,21 +94,8 @@ class WebShopAction extends Action {
 	}
 
 
-	public function valiusername() {
-		$uname = $_POST['uname'] or die('{"code":401,"msg":"uname required"}');
-		$m = M ("shop_user");
-		$list = $m->where(" uname='".$uname."' ")->select(); 
-		// var_dump($list);
-		if ( $list) {        //用户名存在
-			echo('{"code":201, "msg":"exists"}');
-		}else {           	//用户名不存在
-			echo('{"code":200, "msg":"non-exists"}');
-		}  
-	}
-
-
 	public function dailySignIn() {   		 //日常签到 （+ 8 积分）
-		$uid = session('uid') or die('{"code":401,"msg":"uid required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
 		$currentTime = date("Y/m/d");
 	
 		$result = M()->query("SELECT sign_time FROM rc_shop_user WHERE uid = $uid ");
@@ -132,9 +119,10 @@ class WebShopAction extends Action {
 
 	public function verify() {			//生成验证码
 		//去除BOM头  或直接将php文件保存格式改为UTF-8 不带BOM， BOM头只在php输出为图片时会导致出错
-		// ob_end_clean();	ob_clean();
+		// ob_end_clean();	
+		ob_clean();
 		import ( "ORG.Util.Image" );
-		Image::buildImageVerify ( 4, 5,'png');
+		Image::buildImageVerify ( 4, 1,'png');
 
 	}
 
@@ -168,7 +156,7 @@ class WebShopAction extends Action {
 		$insert_token = M('shop_user_token')->add($data_token);
 		
 		
-		$ucookie = hash_hmac("sha256",time(),md5("zdkjadmin"));
+		$ucookie = hash_hmac("sha256",session('PHPSESSID').time(),md5("zdkjadmin"));
 		$data_cookie['uid'] = $res[0]['uid'];
 		$data_cookie['cookie'] = $ucookie;
 		$data_cookie['cook_times'] = 0;
@@ -183,41 +171,20 @@ class WebShopAction extends Action {
 		}  
 	}
 
-	public function getBasic() {
-		if ( session('session_uid') ) {
-			$uid = session('session_uid');
-			$result = M()->query("SELECT uid,uname,score FROM rc_shop_user WHERE uid=$uid");
-			if ($result) {
-				$output['code'] = 200;
-				$output['array'] = $result;
-			
-				echo json_encode($output);
-				return;
-			} else {
-				$output['code'] = 201;      //未授权
-				$output['msg'] = "user need login";
-			
-				echo json_encode($output);
-				return;
-			}
-		}
-	}
 
 	public function login() {			//登录
-		// $verify = $_POST['verify'] or die('{"code":401,"msg":"verify required"}');
+		$verify = $_POST['verify'] or die('{"code":401,"msg":"verify required"}');
 		$uname = $_POST['uname'] or die('{"code":401,"msg":"uname required"}');
-		$upwd = $_POST['upwd'] or die('{"code":402,"msg":"upwd required"}');
-		
-		// if ($_SESSION['verify'] != md5($_POST['verify'])) {
-		// 	var_dump($_POST['verify']);
-		// 	var_dump(session('varify'));
-		// 	echo ('{"code":301,"msg":"verify failed"}');
-		// 	return;
-		// }
+		$upwd = $_POST['upwd'] or die('{"code":401,"msg":"upwd required"}');
+
+		if ($_SESSION['verify'] != md5($_POST['verify'])) {
+			die ('{"code":301,"msg":"verify failed"}');
+		}
 	
 		$res = M("shop_user")->where(array('uname'=>$uname,'upwd'=>$upwd))->getField('uid');
-
+		
 		if ( $res) {  
+			$score = M("shop_user")->where("uid = $res")->getField('score');
 			$res_token =  M('shop_user_token')->where("uid=".$res." and token_time>".time())->find();//获取有效token
 			if (!$res_token['token']){
 				$utoken =  md5(time());
@@ -238,7 +205,8 @@ class WebShopAction extends Action {
 				$ucookie = $res_cookie['cookie'];
 			} else {
 				$times = M('shop_user_cookie')->where("uid=".$res)->getField('times');
-				$ucookie = hash_hmac("sha256",time(),md5("zdkjadmin"));
+				
+				$ucookie = hash_hmac( "sha256", session('PHPSESSID').time(), md5("zdkjadmin"));
 				$data_cookie['cookie'] = $ucookie;
 				$data_cookie['cook_times'] = 0;
 
@@ -247,15 +215,16 @@ class WebShopAction extends Action {
 			}
 			
 			if ($utoken && $ucookie) {
-				session('name', $uname );
-				session( 'session_uid', $res );
-				session( 'ucookie', $ucookie );
+				session( 'uid', $res );
+				session( 'access_token', $utoken );
+				cookie( 'PHPSESSID', $ucookie, array('expire'=>3600*3) );
 
 				$data['code'] = 200;
 				$data['msg'] = 'login succ';
-				$data['uid'] = $res;
+				$data['uname'] = $uname;
+				$data['score'] = $score;
 				$data['utoken'] = $utoken;
-				$data['ucookie'] = $ucookie;
+				$data['ucookie'] = cookie('PHPSESSID');
 				echo json_encode($data);
 			}
 			else 
@@ -268,10 +237,12 @@ class WebShopAction extends Action {
 	}
 	
 	public function logout() {			//登出
-		$uid = I('uid') or die('{"code":402,"msg":"uid required"}');
-		$uid = intval($uid);
+		$uid = session('uid') or die('{"code":402,"msg":"did not login"}');
+
 		$data_token['token_time'] = "";
 		$data_token['token'] = "";
+		session( null );
+		cookie( null );
 		$res_token = M('shop_user_token')->where("uid=".$uid)->save($data_token);//token_time 更新
 		
 		$data_cookie['cook_times'] = "";
@@ -286,36 +257,66 @@ class WebShopAction extends Action {
 		
 	}
 	
-	public function vaile_cookie(){//验证cookie 简化登陆步骤 				
-		$cookie = $_POST['ucookie'] or die('{"code":402,"msg":"cookie required"}');
-		
-		$cookie_res = M('shop_user_cookie')->where("cookie='".$cookie."'and cook_times<1000")->find();
-		if ($cookie_res){
-			$update_times = M('shop_user_cookie')->where("cookie='".$cookie."'")->setInc('cook_times');//cookie_times 更新
-			if ($update_times){
-				//更新token值；
-				$token = M('shop_user_token')->where("uid=".$cookie_res['uid'])->getField('token');
-				$uid = $cookie_res['uid'];
+	public function vaile_login(){				//验证cookie 免密登录 		
+		if (session('uid')) {			//session 未失效
+			$uid = session('uid'); 
+			$res_user = M()->query(" SELECT uname, score FROM rc_shop_user WHERE uid = $uid ");
+			$token = M('shop_user_token')->where(" uid=$uid ")->getField('token');
+			
+			$data['code'] = 200;
+			$data['token'] = $token;
+			$data['msg'] = 'user already login';
+			$data['userInfo'] = $res_user;
 
-				//更新成功后输出以下， 并附带 utoken值
-				$data['code'] = 200;
+			echo json_encode($data);
+		} 		
+
+		$cookie = session('PHPSESSID') or die('{"code":401,"msg":"login required"}');
+		$m = M('shop_user_cookie');
+
+		$cookie_res = $m->where("cookie='".$cookie."'and cook_times<1000")->find();
+		if ($cookie_res){
+			$uid = $cookie_res['uid'];
+			//更新cookie值
+			$cookie = hash_hmac("sha256", rand(1000, 9999)."zdkjshopup".time(), md5("zdkjadmin"));
+
+			$update_data['cook_time'] = $cookie_res['cook_time'] + 1;
+			$update_data['times'] = $cookie_res['times'] + 1;
+			$update_data['cookie'] = $cookie;
+
+			$update_cookie = $m->data( $update_data )->where(" uid=$uid ")->save();
+			//更新token值；
+			$utoken =  md5(time());
+			$data_token['token'] =$utoken;
+			$data_token['token_time'] = time()+86400;
+			$data_token['logintime'] = date ( 'Y-m-d H:i:s' );
+			$insert_token = M('shop_user_token')->where("uid=".$uid)->save($data_token);
+
+			$res_user = M()->query(" SELECT uname, score FROM rc_shop_user WHERE uid = $uid ");
+			if ( $update_cookie && $insert_token) {
+				session( 'uid', $uid );
+				session( 'access_token', $utoken );
+				cookie( 'PHPSESSID', $cookie, array('expire'=>3600*3) );
+
+				$data['code'] = 201;
 				$data['token'] = $token;
+				$data['cookie'] = cookie('PHPSESSID');
+				$data['userInfo'] = $res_user;
 				$data['msg'] = 'login succ';
-				$data['id'] = $cookie_res['uid'];
 
 				echo json_encode($data);
 			} else {
-				echo('{"code":201, "msg":"login set msg err"}');
+				echo('{"code":401, "msg":"login set msg err"}');
 			}
 		} else {
-			echo('{"code":201, "msg":"login over frequency"}');
+			echo('{"code":401, "msg":"login over frequency"}');
 		}
 		
 	}
 	
 	public function vaile_token(){//验证token 在通信的时候用
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
 		$token = $_POST['utoken'] or die('{"code":401,"msg":"token required"}');
-		$uid = $_POST['uid'] or die('{"code":401,"msg":"uid required"}');
 
 		$now_time = time();
 		$token_res = M('shop_user_token')->where("token='".$token."'and uid=$uid and token_time>".$now_time)->getField('uid');
@@ -333,103 +334,9 @@ class WebShopAction extends Action {
 	
 	}
 
-	
-
-	// public function getBasic(){ //获取用户基本信息
-	// 	@$uid = $_POST['uid'];
-	// 	@$token = $_POST['utoken'];
-	// 	@$cookie = $_POST['ucookie'];
-
-	// 	if ($uid) {
-	// 		// var_dump($_REQUEST['uid']);
-	// 		$result = M()->query("SELECT uid,uname,score FROM rc_shop_user WHERE uid=$uid");
-	// 		if ($result) {
-	// 			$output['code'] = 200;
-	// 			$output['array'] = $result;
-			
-	// 			echo json_encode($output);
-	// 			return;
-	// 		} else {
-	// 			$output['code'] = 401;      //未授权
-	// 			$output['msg'] = "uid err";
-			
-	// 			echo json_encode($output);
-	// 			return;
-	// 		}
-	// 	}
-		
-	// 	if ($token) {
-	// 		$token_res = M('shop_user_token')->where("token='".$token."'and token_time>".time())->getField('uid');
-	// 		if ($token_res){
-	// 			$result = M()->query("SELECT uname,score,uid FROM rc_shop_user WHERE uid=$token_res");
-	// 			$data['code'] = 200;
-	// 			$data['msg'] = 'token succ';
-	// 			$data['array'] = $result;
-			
-	// 			echo json_encode($data);
-
-	// 		} else {
-	// 			//token 失效时  执行cookie判断     
-	// 			if ($cookie) {
-	// 				$cookie_res = M('shop_user_cookie')->where("cookie='".$cookie."'and cook_times<1000")->find();
-					
-	// 				if ($cookie_res){
-	// 					$data_times['times'] = $cookie_res['times'] +1;
-	// 					$data_times['cook_times'] = 0;
-	// 					$update_times = M('shop_user_cookie')->where("cookie='".$cookie."'")->save($data_times);//cookie_times 更新
-	// 					if ($update_times){
-	// 						$token = M('shop_user_token')->where("uid=".$cookie_res['uid'])->getField('token');
-	// 						$result = M()->query("SELECT uname,score,uid FROM rc_shop_user WHERE uid=".$cookie_res['uid']);
-	// 						$data['code'] = 201;
-	// 						$data['token'] = $token;
-	// 						$data['msg'] = 'cookie succ';
-	// 						$data['array'] = $result;
-					
-	// 						echo json_encode($data);
-	// 					} else {
-	// 						echo('{"code":404, "msg":"login set msg err"}');        //服务器错误
-	// 					}
-	// 				} else {
-	// 					echo('{"code":400, "msg":"login over frequency or err"}');		//恶意请求	
-	// 				}
-
-	// 			} else {
-	// 				echo('{"code":400, "msg":"login err , need login"}');
-	// 			}
-				
-	// 		}
-			
-	// 	} else if ($cookie) {
-	// 		$cookie_res = M('shop_user_cookie')->where("cookie='".$cookie."'and cook_times<1000")->find();
-
-	// 		if ($cookie_res){
-	// 			$update_times = M('shop_user_cookie')->where("cookie='".$cookie."'")->setInc('cook_times');//cookie_times 更新
-	// 			if ($update_times){
-	// 				$token = M('shop_user_token')->where("uid=".$cookie_res['uid'])->getField('token');
-	// 				$result = M()->query("SELECT uname,score,uid FROM rc_shop_user WHERE uid=".$cookie_res['uid']);
-	// 				$data['code'] = 201;
-	// 				$data['token'] = $token;
-	// 				$data['msg'] = 'cookie succ';
-	// 				$data['array'] = $result;
-			
-	// 				echo json_encode($data);
-	// 			} else {
-	// 				echo('{"code":404, "msg":"login set msg err"}');        //服务器错误
-	// 			}
-	// 		} else {
-				
-	// 			echo('{"code":400, "msg":"login over frequency or err"}');		//恶意请求	
-	// 		}
-	// 	} else {
-	// 		echo ('{"code":404, "msg":"user need login"}');
-	// 	}
-		
-		
-	// }
-
 
 	public function getGoodsDetails() {		
-		@$pid = I('pid') or die('{"code":401,"msg":"goods id required"}');
+		$pid = I('pid') or die('{"code":401,"msg":"goods id required"}');
 
 		$list = M("shop_goods")->where(" id=$pid ")->select();
 		$list['base_freight'] = M()->query(" SELECT default_cost FROM rc_shop_goods A JOIN rc_shop_freight_module B ON A.freight_module = B.id WHERE A.id=$pid ");
@@ -442,18 +349,17 @@ class WebShopAction extends Action {
 	}
 
 	public function addCart() {			//添加购物车
-		@$uid = I('uid') or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
 		@$pid = I('pid') or die('{"code":401,"msg":"product id required"}');
-		$uid = intval($uid);
-		$pid = intval($pid);
+
 		$User = M("shop_cart_order_sum"); 
 		//判断是否已添加过该商品
 		$vali = $User->where(" uid=$uid AND pid=$pid AND status=0 ")->select();
-		if ($vali) {  echo ('{"code":401, "msg":"goods existed"}');  return;  }
+		if ($vali) {  echo ('{"code":301, "msg":"goods existed"}');  return;  }
 
 		// 购物车数据设置上限20条（不同商品最多20条），过多让用户清理购物车 
 		$full = $User->where(" uid=$uid AND status=0 ")->select();
-		if( count($full) >= 20) { echo ('{"code":402, "msg":"goods full"}');  return;  }
+		if( count($full) >= 20) { echo ('{"code":302, "msg":"goods full"}');  return;  }
 
 		$data['uid'] = $uid;
 		$data['pid'] = $pid;
@@ -471,7 +377,8 @@ class WebShopAction extends Action {
 
 
 	public function getCart() {			//购物车页面信息 
-		$uid = $_POST['uid'] or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
+
 		$result = M()->query("SELECT c.cart_id, c.pid, c.num, d.sname, d.score, d.price, d.realprice, d.logo, d.freight_type FROM rc_shop_cart_order_sum c 
 		JOIN rc_shop_goods d ON c.pid=d.id WHERE c.uid=$uid AND c.status=0 ORDER BY c.add_time DESC LIMIT 20");
 		//判断用户购物车是否有商品再操作     code:200 有，返回数据， 201 无数据
@@ -491,7 +398,6 @@ class WebShopAction extends Action {
 
 	public function deleteCartItem() {		//删除购物车商品
 		$cart_id = I('cart_id') or die('{"code":401,"msg":"cart id required"}');
-		$cart_id = intval($cart_id);
 		$m = M("shop_cart_order_sum");
 
 		$res = $m->where(" cart_id = $cart_id ")->delete();
@@ -506,8 +412,8 @@ class WebShopAction extends Action {
 
 
 	public function commitDemand() {					//购物车页面提交创建订单请求
-		$cart_id = I('cart_id') or die('{"code":401,"msg":"cart id required"}');
-		$num = I('num') or die('{"code":401,"msg":"num required"}');
+		$cart_id = $_POST['cart_id'] or die('{"code":401,"msg":"cart id required"}');
+		$num = $_POST['num'] or die('{"code":401,"msg":"num required"}');
 
 		$cart_id_array = explode('/',$cart_id);
 		$num_array = explode('/',$num);
@@ -533,7 +439,7 @@ class WebShopAction extends Action {
 														// 2.包邮商品与非包邮商品合并付款，付续重（续件）运费即可
 														// 3.不会有增加两件的续重（续件）计算，不用考虑
 														// 4.商品计费方式统一。
-		$uid = I('uid') or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user id required"}');
 		@$pid = I('pid');
 		@$cart_id = I('cart_id');
 		@$order_number = I('order_number');
@@ -705,7 +611,7 @@ class WebShopAction extends Action {
 	
 
 	public function createOrder(){
-		$uid = $_POST['uid'] or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
 		$address_id = $_POST['address_id'] or die('{"code":401,"msg":"address id required"}');
 		$pid = $_POST['pid'] or die('{"code":401,"msg":"goods id required"}');
 		$num = $_POST['num'] or die('{"code":401,"msg":"num required"}');
@@ -788,12 +694,10 @@ class WebShopAction extends Action {
 	
 
 	public function pay() {				//付款后     待确定
-		$order_number = I('order_number') or die ('{"code":401,"msg":"order number required"}');
-		$score = I('score') or die ('{"code":401,"msg":"score required"}');
-		$uid = I('uid') or die ('{"code":401,"msg":"uid required"}');
+		$uid = session('uid') or die ('{"code":401,"msg":"uid required"}');
+		@$score = session('score');
+		$order_number = $_POST['order_number'] or die ('{"code":401,"msg":"order number required"}');
 
-		$score = intval($score);
-		$uid = intval($uid);
 		$update1 = M('shop_user')->where(" uid = $uid ")->setDec('score',$score);
 		$update2 = M('shop_order_manage')->data(array('status'=>0))->where(" order_number = $order_number ")->save();
 		if ($update1 && $update2) {
@@ -804,7 +708,7 @@ class WebShopAction extends Action {
 
 
 	public function getAddress() {		//用户地址
-		$uid = I('uid') or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
 
 		$list = M()->query(" SELECT c.area, d.city, e.province, b.phone, b.address, b.name, b.selected, b.aid 
 							FROM rc_shop_user_address AS b
@@ -813,7 +717,6 @@ class WebShopAction extends Action {
 							JOIN rc_shop_address_provinces AS e ON b.province = e.provinceid
 							WHERE b.uid = $uid ORDER BY selected DESC ");
 
-		$data = [];
 		if (!$list) {
 			$data['code'] = 201;
 			$data['msg'] = "user has no address";
@@ -829,7 +732,7 @@ class WebShopAction extends Action {
 
 
 	public function userSelectedAddress() {			//用户创建订单时 选择地址不使用默认地址
-		$uid = $_POST['uid'] or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"user need login"}');
 		$address_id = $_POST['address_id'] or die('{"code":401,"msg":"user id required"}');
 
 		$update = M('shop_user')->where(" uid = $uid ")->setField('reserve_address_id', $address_id);
@@ -839,14 +742,14 @@ class WebShopAction extends Action {
 
 
 	public function setDefaultAddress(){            //设置默认地址
-		$uid = I('uid') or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"login required"}');
 		$aid = I('aid') or die('{"code":401,"msg":"user address id required"}');
 
 		// 先清空默认地址 （ 'selected' 1 为默认地址  ，0 为备用地址  ）
 		$empty = M('shop_user_address')->data(array('selected'=>0))->where(" uid=$uid ")->save();
 
 		// 设置默认地址
-		$update = M('shop_user_address')->data(array('selected'=>1 ))->where(" aid = $aid ")->save();
+		$update = M('shop_user_address')->data(array('selected'=>1 ))->where(" aid = $aid AND uid=$uid ")->save();
 
 		if ( $update ) {
 			echo ('{"code":200, "msg":"update succ"}');
@@ -856,16 +759,17 @@ class WebShopAction extends Action {
 	}
 
 
-	public function getEditAddress(){				
-		$aid = I('aid') or die('{"code":401,"msg":"user address id required"}');
+	public function getEditAddress(){	
+		$uid = session('uid') or die('{"code":401,"msg":"login required"}'); 			
+		$aid = $_POST['aid'] or die('{"code":401,"msg":"user address id required"}');
 
-		$list = M('shop_user_address')->where(" aid=$aid ")->select();
+		$list = M('shop_user_address')->where(" aid=$aid AND uid=$uid ")->select();
 		echo json_encode($list);
 	}
 
 
 	public function newAddress(){
-		$uid = $_POST['uid'] or die('{"code":401,"msg":"user id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"login required"}');
 		$name = $_POST['name'] or die('{"code":401,"msg":"address name required"}');
 		$phone = $_POST['phone'] or die('{"code":401,"msg":"address phone required"}');
 		$address = $_POST['addressDetail'] or die('{"code":401,"msg":"address detail required"}');
@@ -876,7 +780,6 @@ class WebShopAction extends Action {
 		
 		$m = M("shop_user_address"); 
 
-		$uid = intval($uid);
 		$data['uid'] = $uid;
 		$data['name'] = $name;
 		$data['phone'] = $phone;
@@ -917,11 +820,11 @@ class WebShopAction extends Action {
 
   
 	public function deleteAddress(){
-		$aid = I('aid') or die('{"code":401,"msg":"address id required"}');
-
+		$aid = $_POST['aid'] or die('{"code":401,"msg":"address id required"}');
+		$uid = session('uid');
 		$m = M("shop_user_address");
 
-		$res = $m->where(" aid = $aid ")->delete();
+		$res = $m->where(" aid = $aid AND uid=$uid ")->delete();
 
 		if ( $res ) {
 			echo ('{"code":200, "msg":"del succ"}');
@@ -934,7 +837,7 @@ class WebShopAction extends Action {
 
 
 	public function getAllOrder() {      //已付款或交易成功   获取 二维关联数组
-		$uid = I('uid') or die('{"code":401,"msg":"address id required"}');
+		$uid = session('uid') or die('{"code":401,"msg":"login required"}');
 		// $uid = intval($uid);
 
 		//判断是否存在超时未付款订单
@@ -972,9 +875,9 @@ class WebShopAction extends Action {
 	}
 
 	public function deleteOrder() {
-		$order_number = I("order_number") or die ('{"code":401,"msg":"order number required"}');
-
-		$cancle = M('shop_order_manage')->where(" order_number=$order_number ")->delete();
+		$order_number = $_POST["order_number"] or die ('{"code":401,"msg":"order number required"}');
+		$uid = session('uid');
+		$cancle = M('shop_order_manage')->where(" order_number=$order_number AND uid=$uid ")->delete();
 
 		if($cancle) {
 			echo ('{"code":200, "msg":"del succ"}');

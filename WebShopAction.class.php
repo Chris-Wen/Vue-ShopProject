@@ -9,6 +9,7 @@ $allow_origin = array(
 if(in_array($origin, $allow_origin)){    
     header('Access-Control-Allow-Origin: '.$origin );    	
 	header("Access-Control-Allow-Credentials: true");
+	header('Access-Control-Allow-Methods:GET, POST, OPTIONS');
 	header("Content-Type:application/json;charset=utf8");
 }  
 
@@ -103,13 +104,14 @@ class WebShopAction extends Action {
 		if ( $currentTime==$result[0]["sign_time"] ){
 			echo( '{"code":201, "msg":"user already sign in"}' );
 		} else {
-
-			$update = M('shop_user')->data(array('sign_time'=>$currentTime))->where(" uid = $uid ")->save();
-			$update = M('shop_user')->where(" uid = $uid ")->setInc('score',8);
+			$score = $result[0]['score'] + 8;
+			$update = M('shop_user')->data(array('sign_time'=>$currentTime, 'score'=>$score ))->where(" uid = $uid ")->save();
 
 			// echo  $update;
 			if ($update) {
-				echo ('{"code":200, "msg":"sign in succ"}');
+				$data['score'] = $score;
+				$data['code'] = 200;
+				echo json_encode($data);
 			} else {
 				echo ('{"code":201, "msg":"sign in err"}');
 			}
@@ -215,8 +217,8 @@ class WebShopAction extends Action {
 			}
 			
 			if ($utoken && $ucookie) {
-				session( 'uid', $res );
-				session( 'access_token', $utoken );
+				session( 'uid', $res, array('expire'=>3600*3) );
+				session( 'access_token', $utoken, array('expire'=>3600*3) );
 				cookie( 'PHPSESSID', $ucookie, array('expire'=>3600*3) );
 
 				$data['code'] = 200;
@@ -237,7 +239,7 @@ class WebShopAction extends Action {
 	}
 	
 	public function logout() {			//登出
-		$uid = session('uid') or die('{"code":402,"msg":"did not login"}');
+		$uid = session('uid') or die('{"code":401,"msg":"did not login"}');
 
 		$data_token['token_time'] = "";
 		$data_token['token'] = "";
@@ -257,18 +259,20 @@ class WebShopAction extends Action {
 		
 	}
 	
-	public function vaile_login(){				//验证cookie 免密登录 		
+	public function vaileLogin(){				//验证cookie 免密登录 		
 		if (session('uid')) {			//session 未失效
 			$uid = session('uid'); 
-			$res_user = M()->query(" SELECT uname, score FROM rc_shop_user WHERE uid = $uid ");
+			$res_user = M('shop_user')->where(" uid = $uid ")->find();
 			$token = M('shop_user_token')->where(" uid=$uid ")->getField('token');
 			
 			$data['code'] = 200;
 			$data['token'] = $token;
 			$data['msg'] = 'user already login';
-			$data['userInfo'] = $res_user;
+			$data['uname'] = $res_user['uname'];
+			$data['score'] = $res_user['score'];
 
 			echo json_encode($data);
+			return;
 		} 		
 
 		$cookie = session('PHPSESSID') or die('{"code":401,"msg":"login required"}');
@@ -294,14 +298,15 @@ class WebShopAction extends Action {
 
 			$res_user = M()->query(" SELECT uname, score FROM rc_shop_user WHERE uid = $uid ");
 			if ( $update_cookie && $insert_token) {
-				session( 'uid', $uid );
-				session( 'access_token', $utoken );
+				session( 'uid', $uid , array('expire'=>3600*3));
+				session( 'access_token', $utoken , array('expire'=>3600*3));
 				cookie( 'PHPSESSID', $cookie, array('expire'=>3600*3) );
 
 				$data['code'] = 201;
 				$data['token'] = $token;
 				$data['cookie'] = cookie('PHPSESSID');
-				$data['userInfo'] = $res_user;
+				$data['uname'] = $res_user[0]['uname'];
+				$data['score'] = $res_user[0]['score'];
 				$data['msg'] = 'login succ';
 
 				echo json_encode($data);
@@ -695,7 +700,7 @@ class WebShopAction extends Action {
 
 	public function pay() {				//付款后     待确定
 		$uid = session('uid') or die ('{"code":401,"msg":"uid required"}');
-		@$score = session('score');
+		$score = $_POST['score'];
 		$order_number = $_POST['order_number'] or die ('{"code":401,"msg":"order number required"}');
 
 		$update1 = M('shop_user')->where(" uid = $uid ")->setDec('score',$score);

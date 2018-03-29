@@ -6,30 +6,42 @@
         <cube-popup type="login-popup" ref="myPopup" :mask="false" :content="popMsg" />
         <form @submit.prevent>
             <ul>
-                <li>
-                    <cube-validator v-model="valid" :for="uname" :rule="rule1" :messages="messages1">
-                        <cube-input type="text" name="uname" id="uname" v-model="uname" :clearable="clearable"  placeholder="请输入用户名" />
+                <li v-if="!isRegisterPartShow">
+                    <cube-validator v-model="valiuname" :for="loginName" :rule="ruleLoginName" :messages="loginNameMsg">
+                        <cube-input type="text" v-model="loginName" :clearable="clearable"  placeholder="请输入用户名" />
                     </cube-validator>
                 </li>
-                <li>
-                    <cube-validator v-model="valid" :for="upwd" :rule="rule2" :messages="messages2">
-                        <cube-input type="password" name="upwd" id="upwd" v-model="upwd" :clearable="clearable" :eye="eye" placeholder="请输入密码" />
+                <li v-if="!isRegisterPartShow">
+                    <cube-validator v-model="valiupwd" :for="loginUpwd" :rule="ruleLoginUpwd" :messages="loginUpwdMsg">
+                        <cube-input type="password" v-model="loginUpwd" :clearable="clearable" :eye="eye" placeholder="请输入密码" />
+                    </cube-validator>
+                </li>
+
+                <li v-if="isRegisterPartShow">
+                    <cube-validator v-model="validuname" :for="uname" :rule="rule1" :messages="messages1">
+                        <cube-input type="text" v-model="uname" :clearable="clearable"  placeholder="请输入用户名" />
                     </cube-validator>
                 </li>
                 <li v-if="isRegisterPartShow">
-                    <cube-validator v-model="valid1" :for="cpwd" :rule="rule3" :messages="messages3">
-                        <cube-input type="password" name="confirm" id="confirm" v-model="cpwd" :clearable="clearable" :eye="eye" placeholder="请确认密码" />
+                    <cube-validator v-model="validupwd" :for="upwd" :rule="rule2" :messages="messages2">
+                        <cube-input type="password" v-model="upwd" :clearable="clearable" :eye="eye" placeholder="请输入密码" />
                     </cube-validator>
                 </li>
-                <li v-if="isRegisterPartShow" class="code">
-                    <cube-validator v-model="valid1" :for="code" :rule="rule4" :messages="messages4">
-                        <cube-input type="text" name="code" id="code" :clearable="clearable" v-model="code" placeholder="验证码" />
+                <li v-if="isRegisterPartShow">
+                    <cube-validator v-model="validcpwd" :for="cpwd" :rule="rule3" :messages="messages3">
+                        <cube-input type="password" v-model="cpwd" :clearable="clearable" :eye="eye" placeholder="请确认密码" />
                     </cube-validator>
-                    <img src="" alt="">
+                </li>
+                
+                <li class="code">
+                    <cube-validator v-model="valicode" :for="code" :rule="rule4" :messages="messages4">
+                        <cube-input type="text" :clearable="clearable" v-model="code" placeholder="验证码" />
+                    </cube-validator>
+                    <img class="verify" :src="verify" @click="changeVerify" alt="valicode">
                 </li>
                 <li>
-                    <button :disabled="vali" :class="{ active: !isRegisterPartShow } " @click="handleLogin">登 录</button>
-                    <button :disabled="vali" :class="{ active: isRegisterPartShow }" @click="handleRegister">注 册</button>
+                    <button :class="{ active: !isRegisterPartShow } " @click="handleLogin">登 录</button>
+                    <button :disabled="!(validuname && validupwd && validcpwd) || !isRegisterPartShow" :class="{ active: isRegisterPartShow }" @click="handleRegister">注 册</button>
                 </li>
             </ul>
         </form>
@@ -48,14 +60,19 @@ export default {
                 showIcon: false
             },
             isRegisterPartShow: false,
+            loginName: '', loginUpwd: '',
             uname: '',  upwd: '',  cpwd: '',  code: '',
-            methodHandleable: true,
+            valiuname: false, valiupwd: false,
+            validuname: false, validupwd: false, validcpwd: false, valicode: false,
             popMsg: '',
             clearable: true,
             eye: { open: false },
-            vali: false,
             valid: false,
-            valid1: false,
+            verify: 'http://community.73776.com/index.php/shop/WebShop/verify',    //  验证码
+            ruleLoginName: { required: true },
+            ruleLoginUpwd: { required: true },
+            loginNameMsg: { required: '请输入用户名' },
+            loginUpwdMsg: { required: '请输入密码' },
             rule1: {
                 required: true,
                 pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
@@ -107,20 +124,19 @@ export default {
                 component.hide()
             }, 2000)
         },
+        changeVerify() {
+            this.verify = this.verify + '?rand = '+ Math.random();
+        },
         handleLogin() {
             if ( this.isRegisterPartShow == true ) {
-                this.valid1 = false;
                 this.isRegisterPartShow = false; 
                 return ;
             }
-            if ( !this.uname ) {
-                this.showPopup('myPopup', '请输入用户名');
+            if ( !this.code ) {
+                this.showPopup('myPopup', '请输入验证码');
                 return;
             }
-            if ( !this.upwd ) {
-                this.showPopup('myPopup', '请输入密码');
-                return;
-            }
+
             this.axios({
                 type:'POST',
                 url:'/login',
@@ -133,12 +149,11 @@ export default {
             })
         },
         handleRegister() {
+            console.log(2)
             if ( this.isRegisterPartShow == false ) {
-                this.valid1 =true;
                 this.isRegisterPartShow = true;
                 return ;
             }
-            if ( !this.methodHandleable ) return;
             console.log(qs.stringify({
                     uname: this.uname,
                     upwd: this.uwpd,
@@ -190,6 +205,7 @@ export default {
                 text-align: center;
                 input { height: 80px; width: 100%; text-indent: 1em }
             }
+            img { float: right; width: 240px; height: 80px; }
         }
         ul li {
             min-height: 130px;

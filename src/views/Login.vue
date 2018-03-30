@@ -140,9 +140,11 @@ export default {
             this.axios({
                 type:'POST',
                 url:'/login',
+                // headers: {  },
                 data: qs.stringify({
-                    uname: this.uname,
-                    upwd: this.upwd
+                    uname: this.loginName,
+                    upwd: this.loginUpwd,
+                    verify: this.code
                 })
             }).then( response => {
                 console.log(response)

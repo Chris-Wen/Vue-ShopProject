@@ -19,6 +19,7 @@ Vue.use(Vuex)
 
 axios.defaults.baseURL = 'http://community.73776.com/index.php/shop/WebShop'
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+axios.defaults.withCredentials = true;
 
 Vue.prototype.axios = axios
 Vue.prototype.preSrc = 'http://221.123.178.232/smallgamesdk/Public/Uploads/'

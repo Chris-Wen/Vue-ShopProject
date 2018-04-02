@@ -37,6 +37,7 @@ export default {
 			icon: 		state => state.titleGroup.icon ,
 			link: 		state => state.titleGroup.link
 		})
+
 	}
 }
 </script>

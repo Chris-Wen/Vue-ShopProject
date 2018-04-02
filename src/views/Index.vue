@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <banner />
+        <banner id="banner"/>
         <ul>
             <li>这是主页</li>
             <li>这是主页</li>
@@ -36,7 +36,7 @@ export default {
         // }
         // ...mapMutations([ 'handleTitle']),    //同步状态参数
         //非同步/同步状态参数   支持载荷    直接在函数调用处传递参数
-        ...mapActions([ 'handleTitle' ])        // 将 `this.handleTitle(payload)` 映射为 `this.$store.dispatch('handleTitle',payload)`  
+        ...mapActions([ 'handleTitle', 'getBanner'])        // 将 `this.handleTitle(payload)` 映射为 `this.$store.dispatch('handleTitle',payload)`  
     },
     mounted(){
         this.handleTitle({
@@ -45,18 +45,16 @@ export default {
             icon:     this.titleInfo.icon, 
             link:     this.titleInfo.link
         });
+        this.getBanner()
     }
 }
 </script>
 
 
 <style lang="scss" scoped>
-.index-box{
+.container{
     box-sizing: border-box;
     width: 100%;
-    
-
-
 }
 
 </style>

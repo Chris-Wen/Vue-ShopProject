@@ -7,18 +7,18 @@ import router from './router'
 import axios from 'axios'
 import Vuex from 'vuex'
 import store from './vuex/store'
-import qs from 'qs'
 
 import Cube from 'cube-ui'
 
 import 'lib-flexible'
 import './assets/css/reset.css'
+import api from './assets/js/api'
 
 Vue.use(Cube)
 Vue.use(Vuex)
+Vue.use(api)
 
-axios.defaults.baseURL = 'http://community.73776.com/index.php/shop/WebShop'
-axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
 axios.defaults.withCredentials = true;
 
 Vue.prototype.axios = axios

@@ -9,7 +9,7 @@ i { font-style:normal }
 blockquote, q {
     quotes: none;
 }
-img { vertical-align: middle }
+img { vertical-align: middle; width: 100%; }
 blockquote:before, blockquote:after,
 q:before, q:after {
     content: none;

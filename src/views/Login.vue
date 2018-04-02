@@ -19,7 +19,7 @@
 
                 <li v-if="isRegisterPartShow">
                     <cube-validator v-model="validuname" :for="uname" :rule="rule1" :messages="messages1">
-                        <cube-input type="text" v-model="uname" :clearable="clearable"  placeholder="请输入用户名" />
+                        <cube-input type="text" v-model="uname" :clearable="clearable"  placeholder="请输入用户名" @blur="checkName"/>
                     </cube-validator>
                 </li>
                 <li v-if="isRegisterPartShow">
@@ -41,7 +41,7 @@
                 </li>
                 <li>
                     <button :class="{ active: !isRegisterPartShow } " @click="handleLogin">登 录</button>
-                    <button :disabled="!(validuname && validupwd && validcpwd) || !isRegisterPartShow" :class="{ active: isRegisterPartShow }" @click="handleRegister">注 册</button>
+                    <button :class="{ active: isRegisterPartShow }" @click="handleRegister">注 册</button>
                 </li>
             </ul>
         </form>
@@ -50,7 +50,7 @@
 
 <script>
 import { mapActions } from 'vuex'
-import qs from 'qs'
+
 export default {
     name:'Login',
     data(){
@@ -60,6 +60,7 @@ export default {
                 showIcon: false
             },
             isRegisterPartShow: false,
+            isUnameExist: false,
             loginName: '', loginUpwd: '',
             uname: '',  upwd: '',  cpwd: '',  code: '',
             valiuname: false, valiupwd: false,
@@ -128,52 +129,64 @@ export default {
             this.verify = this.verify + '?rand = '+ Math.random();
         },
         handleLogin() {
-            if ( this.isRegisterPartShow == true ) {
-                this.isRegisterPartShow = false; 
-                return ;
-            }
-            if ( !this.code ) {
-                this.showPopup('myPopup', '请输入验证码');
-                return;
-            }
+            if ( this.isRegisterPartShow == true ) return this.isRegisterPartShow = false
+            if (!(this.valiuname && this.valiupwd)) return this.showPopup('myPopup', '请输入完整登录信息')
+            if ( !this.code ) return this.showPopup('myPopup', '请输入验证码')
 
-            this.axios({
-                type:'POST',
-                url:'/login',
-                // headers: {  },
-                data: qs.stringify({
-                    uname: this.loginName,
-                    upwd: this.loginUpwd,
-                    verify: this.code
-                })
-            }).then( response => {
-                console.log(response)
+            var params = {
+                uname: this.loginName,
+                upwd:  this.loginUpwd,
+                verify: this.code
+            }
+            this.$store.dispatch('login',params)
+                    .then( res => {
+                        var msg;
+                        switch(res) {
+                            case 200: msg = '登录成功'; setTimeout(() => { this.$router.go(-1)}, 1500);
+                                break;
+                            case 301:  msg = '验证码错误'
+                                break;
+                            case 201: msg = '用户名或密码错误'
+                                break;
+                        }
+                        this.showPopup('myPopup', msg)
+                    })
+        },
+        checkName() {
+            if (!this.uname) return;
+            this.$store.dispatch('valiUserName', {uname: this.uname}).then( res=>{
+                if (res==201) {
+                    this.showPopup('myPopup', "该用户名已注册")
+                    this.isUnameExist = true
+                } else if (res==200) {
+                    this.isUnameExist = false
+                }
             })
         },
-        handleRegister() {
-            console.log(2)
-            if ( this.isRegisterPartShow == false ) {
-                this.isRegisterPartShow = true;
-                return ;
+        handleRegister() {  
+            if ( this.isRegisterPartShow == false ) return this.isRegisterPartShow = true  
+            if (!(this.validuname && this.validupwd && this.validcpwd)) return this.showPopup('myPopup', '请输入正确完整注册信息') 
+
+            if (this.isUnameExist) return this.showPopup('myPopup', '该用户名已注册');
+            if ( !this.code ) return this.showPopup('myPopup', '请输入验证码')
+            var params = {
+                uname: this.uname,
+                upwd: this.upwd,
+                verify: this.code
             }
-            console.log(qs.stringify({
-                    uname: this.uname,
-                    upwd: this.uwpd,
-                    cpwd: this.cpwd,
-                    code: this.code
-                }))
-            this.axios({
-                type:'POST',
-                url:'/register',
-                data: qs.stringify({
-                    uname: this.uname,
-                    upwd: this.uwpd,
-                    cpwd: this.cpwd,
-                    code: this.code
-                })
-            }).then( response => {
-                console.log(response)
-            })
+            this.$store.dispatch('register', params)
+                    .then(res=>{
+                        var msg;
+                        switch (res) {
+                            case 200: msg = "注册成功"; setTimeout( () => location.reload(), 2000);
+                                break;
+                            case 500: msg = "注册失败，请稍候重试";
+                                break;
+                            case 301: msg = "验证码错误";
+                                break;
+                        }
+                        this.showPopup('myPopup', msg)
+                    })
         },
         
     },

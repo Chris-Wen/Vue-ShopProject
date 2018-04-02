@@ -62,12 +62,25 @@ export const getBanner = ({commit,state}, payload) => {
     return new Promise((resolve, reject) => {
         axios.get('/getIndexInfo')
             .then( response => {
-                console.log(response);
+                // console.log(response);
                 if (response.data.code==200) {
-                    state.indexBanner = response.data.banner
-                    state.hotSales = response.data.hotSales
+                    state.indexInfo.indexBanner = response.data.banner
+                    state.indexInfo.hotSales = response.data.hotSales
                 }
                 resolve(response.data)
+            }).catch( err => reject(err) )
+    })
+}
+
+export const getList = ({commit, state}, payload) => {
+    return new Promise((resolve, reject) => {
+        axios.get('/getgoods', {params: payload} )
+            .then( response => {
+                console.log(response);
+                if (response.data.code==200) {
+                    state.listPage.list = response.data.list
+                }
+                resolve(response.data.list)
             }).catch( err => reject(err) )
     })
 }

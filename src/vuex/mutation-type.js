@@ -1,5 +1,4 @@
 // ALL MUTATIONS
-
 export const handleTitle = (state,payload) => {
     state.titleGroup.title  = payload.title;
     state.titleGroup.showIcon = payload.showIcon;

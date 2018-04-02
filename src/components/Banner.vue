@@ -12,7 +12,7 @@ export default {
     },
     computed: {
         items() {
-            var banner = this.$store.state.indexBanner, items = [];
+            var banner = this.$store.state.indexInfo.indexBanner, items = [];
             for(let v of banner) {
                 var item = {};
                 item.url = v.url

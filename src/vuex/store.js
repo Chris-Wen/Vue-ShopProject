@@ -21,8 +21,17 @@ const  state = {
 		score: sessionStorage.getItem('zdkjscore'),
 		token: localStorage.getItem('zdkjtoken')
 	},
-	indexBanner: '',
-	shortBanner: ''
+	indexInfo: {
+		indexBanner: '',
+		shortBanner: ''
+	},
+	listPage: {
+		list: [],
+		ruleList1: [],
+		ruleList2: [],
+		ruleList3: [],
+		ruleList4: []
+	}
 }
 
 //store

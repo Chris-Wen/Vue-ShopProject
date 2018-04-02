@@ -34,7 +34,7 @@
 <script>
 import 'font-awesome/css/font-awesome.css'
 import qs from 'qs'
-import { mapActions } from 'vuex'
+import { mapMutations, mapActions } from 'vuex'
 
 export default {
     name:'goodsList',
@@ -46,17 +46,23 @@ export default {
             },
             type:'',
             rule:'',
-            page:1,
+            page:1,         //分页，当前页码
+            num: 20,        //每次请求显示数据量
             totalPage:'',
             list:[],
             isOption: false,
             check:'fa fa-check icon-check',
-            ruleList:['积分由低到高','价格由低到高','价格由高到低','积分由高到低']
+            ruleList:['积分由低到高','价格由低到高','价格由高到低','积分由高到低'],
+            params: {
+                    page: this.page,
+                    type: this.type,
+                    rule: this.rule,
+                    num: this.num
+                }
         }
     },
     methods:{
-        //更改页头信息
-        ...mapActions([ 'handleTitle' ]),
+        ...mapActions([ 'handleTitle', 'getList' ]),
         //axios 获取列表数据
         getGoodsList( ) {
             this.axios({
@@ -93,10 +99,23 @@ export default {
             title: this.titleInfo.title,
             showIcon: this.titleInfo.showIcon
         })
-        this.getGoodsList();
+        // this.getGoodsList();
+        this.getList({
+                page: this.page,
+                type: this.type,
+                rule: this.rule,
+                num: this.num
+            }).then(res => this.list = res )
     },
-    computed:{
-
+    watch: {
+        page: function(){
+                this.getList({
+                    page: this.page,
+                    type: this.type,
+                    rule: this.rule,
+                    num: this.num
+                })
+            }
     }
 }
 </script>

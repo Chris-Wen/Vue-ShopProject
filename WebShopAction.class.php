@@ -416,7 +416,7 @@ class WebShopAction extends Action {
 	}
 
 
-	public function commitDemand() {					//购物车页面提交创建订单请求
+	public function commitDemand() {		//购物车页面提交创建订单请求
 		$cart_id = $_POST['cart_id'] or die('{"code":401,"msg":"cart id required"}');
 		$num = $_POST['num'] or die('{"code":401,"msg":"num required"}');
 

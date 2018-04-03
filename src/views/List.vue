@@ -11,7 +11,7 @@
             </li>
 		</ul>
 		<ul class="goods-list" id="list">
-			<router-link tag="li" v-for="(value,key) in list" :key='key'  :to="'/details/'+value.pid" :event="['mousedown', 'touchstart']">
+			<router-link tag="li" v-for="(value,key) in this.$store.state.listPage.list" :key='key'  :to="'/details/'+key" :event="['mousedown', 'touchstart']">
 				<dl class="goods-item flex-between" >
 					<dt> <img :src=" preSrc + value.logo " alt=""></dt>
 					<dd class="goods-cont">
@@ -32,8 +32,7 @@
 </template>
 
 <script>
-import 'font-awesome/css/font-awesome.css'
-import qs from 'qs'
+// import 'font-awesome/css/font-awesome.css'
 import { mapMutations, mapActions } from 'vuex'
 
 export default {
@@ -41,7 +40,7 @@ export default {
     data(){
         return {
             titleInfo : {
-                title:'商品详情',
+                title:'商品列表',
                 showIcon: false
             },
             type:'',
@@ -49,7 +48,7 @@ export default {
             page:1,         //分页，当前页码
             num: 20,        //每次请求显示数据量
             totalPage:'',
-            list:[],
+            // list:[],
             isOption: false,
             check:'fa fa-check icon-check',
             ruleList:['积分由低到高','价格由低到高','价格由高到低','积分由高到低'],
@@ -64,25 +63,25 @@ export default {
     methods:{
         ...mapActions([ 'handleTitle', 'getList' ]),
         //axios 获取列表数据
-        getGoodsList( ) {
-            this.axios({
-                    method: 'post',
-                    url:'/getgoods',
-                    data: qs.stringify({
-                            type: this.type,
-                            rule: this.rule,
-                            page: this.page
-                        })
-                })
-                .then(response=>{
-                    if (response.data.code=200) {
-                        this.list = response.data.list
-                        this.totalPage = response.data.totalPage
-                    }
-                }).catch(error=>{
-                    console.log(error)
-                })
-        },
+        // getGoodsList( ) {
+        //     this.axios({
+        //             method: 'post',
+        //             url:'/getgoods',
+        //             data: qs.stringify({
+        //                     type: this.type,
+        //                     rule: this.rule,
+        //                     page: this.page
+        //                 })
+        //         })
+        //         .then(response=>{
+        //             if (response.data.code=200) {
+        //                 this.list = response.data.list
+        //                 this.totalPage = response.data.totalPage
+        //             }
+        //         }).catch(error=>{
+        //             console.log(error)
+        //         })
+        // },
         jumpToDetail(link){
             console.log(link)
             console.log(this.$router)
@@ -90,7 +89,13 @@ export default {
         changeRule(index){
             this.rule = index;
             this.isOption = !this.isOption;
-            this.getGoodsList();
+            var params = {
+                    page: this.page,
+                    type: this.type,
+                    rule: this.rule,
+                    num: this.num
+                };
+            this.getList(params);
         },
         showMenu(){ this.isOption = !this.isOption }
     },
@@ -99,23 +104,25 @@ export default {
             title: this.titleInfo.title,
             showIcon: this.titleInfo.showIcon
         })
-        // this.getGoodsList();
         this.getList({
                 page: this.page,
                 type: this.type,
                 rule: this.rule,
                 num: this.num
-            }).then(res => this.list = res )
+            }).then(res => {
+                this.page = res.page
+                this.totalPage = res.totalPage
+            }).catch(err => reject(err) )
     },
     watch: {
-        page: function(){
-                this.getList({
-                    page: this.page,
-                    type: this.type,
-                    rule: this.rule,
-                    num: this.num
-                })
-            }
+        // page: function(){
+        //         this.getList({
+        //             page: this.page,
+        //             type: this.type,
+        //             rule: this.rule,
+        //             num: this.num
+        //         })
+        //     }
     }
 }
 </script>

@@ -1,45 +1,50 @@
 <template>
     <div class="container">
-        <div class="mask" v-show="isPop" @click="showMask()"></div>
         <!--商品展示-->
+        <!-- <div :class="[showLoading ? 'mask' : 'hide']" >
+            <p><i class="fa fa-spinner fa-spin fa-2x"></i> &nbsp;玩命加载中</p> 
+        </div> -->
+        <Loading :showLoading="isShow"/>
+        <cube-popup type="my-popup" :mask="true" :content="popupMsg" ref="myPopup" />
 		<div class="goods-details">
 			<div class="goods-show">
-				<div class="goods-bgimg"> <img :src="preSrc + details.pic1" > </div>
+				<div class="goods-bgimg"> <img :src="preSrc + details.pic" :onerror="defaultImg"> </div>
 				<div class="goods-cont">
-					<h3>{{details.pname}}</h3>
+					<h3>{{details.title}}</h3>
 					<div class="goods-price">
 						<p> 
                             <i></i> 积分 <span>{{details.score}}</span> 
-                            <span v-if="details.price && parseInt(details.price)>0">+ ￥ {{details.price}}</span>  
+                            <span style="color:red" v-if="details.price && parseInt(details.price)>0">+ ￥ {{details.price}}</span>  
                         </p>
 					</div>
-					<p>市场参考价：{{details.ref_price}}元 <span class="freight">运费：{{details.freight}}元</span></p>
+					<p>市场参考价：{{details.realprice}}元 <span class="freight">运费：{{ details.freight==2 ? '包邮': '不包邮'}}</span></p>
 					<a class="custom-serve" href="javascript:;">
 						<span><i class="fa fa-headphones"></i>联系客服</span>
 					</a>
 				</div>
 			</div>
 			<div class="buy-btn flex-between">
-				<a href="javascript:;" class="add-cart">加入购物车</a>
-				<a href="javascript:;" class="buy-now">立即购买</a>
+				<a href="javascript:;" @click="addCart">加入购物车</a>
+				<a href="javascript:;" @click="buyNow">立即购买</a>
 			</div>
 		</div>
 		<!--商品展示-->
-		<section class="goods-info">
+		<section >
 			<div class="info-title">
 				<span>物品详情</span> 
 				<p class="dotted">·······················································</p>
 			</div>
 			<ul id="productInfo">
-				<li><i>品名：</i>{{details.sub_name}}</li>
-				<li><i>品牌：</i>{{details.pname}}</li>
-				<li><i>详情：</i>{{details.desc}} </li>
+				<li><i>品名：</i>{{details.sname}}</li>
+				<li><i>品牌：</i>{{details.title}}</li>
+				<li><i>详情：</i> <div v-html="details.detail"></div></li>
 			</ul>
 		</section>
     </div>
 </template>
 
 <script>
+import Loading from '../components/Loading'
 import { mapActions } from 'vuex'
 
 export default {
@@ -52,27 +57,62 @@ export default {
                 icon: 'fa fa-shopping-cart fa-lg',
                 link: '/cart'
             },
-            isPop: false,
+            isShow: false,
+            popupMsg: '',
             pid:'',
-            details:''
+            details:'',
+            defaultImg: `this.src="${require("../assets/images/bg_img.jpg")}"`
         }
     },
+    components: { Loading },
     methods:{
-        ...mapActions(['handleTitle']),
-        getGoodsDetails(){
-            this.axios.get( '/getGoodsDetails?pid=' + this.$route.params.pid)
-                    .then( res=>{
-                        if (res.data.code==201) {
-                            console.log('服务器暂无数据')
-                        } else {
-                            this.details = res.data[0]
-                            // console.log(this.details)
-                        }
-                    }).catch( err =>{
-                        console.log(err)
-                    })
+        showPopup(refId, payload) {
+            const component = this.$refs[refId]
+            this.popupMsg = payload
+            component.show()
+            setTimeout(() => {
+                component.hide()
+            }, 2000)
         },
-        showMask(){ this.isPop = !this.isPop },
+        valiLogin() {
+            if ( sessionStorage.getItem('zdkj_userinfo')==null ) {
+                this.showPopup('myPopup', '请先登录')
+                setTimeout(() => {
+                    this.$router.push('/login')
+                }, 2000);
+                return false;
+            }
+            return true;
+        },
+        ...mapActions(['handleTitle']),
+        addCart() {
+            this.isShow = true;
+            this.valiLogin() ? setTimeout(() => {
+                this.$store.dispatch('addCart', {pid: this.pid})
+                    .then( res => {
+                        this.isShow = false
+                        console.log(res)
+                        let msg;
+                        switch(res) {
+                            case 200: msg = '添加成功';
+                                break;
+                            case 301: msg = '购物车中已存在该商品';
+                                break;
+                            case 201: msg = '添加失败，请稍候重试';
+                                break;
+                            case 401: msg = '请登录'; this.$router.push('/login');
+                                break;
+                        }
+                        this.showPopup('myPopup', msg)
+                    })
+            }, 2000) : ''
+
+        },
+        buyNow() {
+            this.valiLogin() ? (()=>{
+                this.$router.push('/orderConfirm/' + this.pid)
+            })() : ''
+        }
     },
     mounted(){
         this.handleTitle({
@@ -81,18 +121,28 @@ export default {
             icon:   this.titleInfo.icon,
             link:   this.titleInfo.link
         })
-        this.pid = parseInt(this.$route.params.pid)
-        this.getGoodsDetails()
+        let index = this.$route.params.index    
+        let data = this.$store.state.listPage.list[index]
+        if ( data ) {       //将数据存储在本地，刷新页面不丢失数据
+            sessionStorage.setItem('_zdkj_goodsdetail', JSON.stringify(data))
+        }
+        this.details = data || JSON.parse(sessionStorage.getItem('_zdkj_goodsdetail') )
+        this.pid = this.details.id
     }
 }
 </script>
 
 <style lang="scss" scoped>
 .container{
-    .mask{
-        z-index: 50;  position: absolute;  width: 100%;height: 100%;
-        background-color: #000; opacity: .2; 
-    }
+    // .mask{
+    //     z-index: 50;  position: fixed;  width: 100%;height: 100%; 
+    //     background-color: rgba(0, 0, 0, 0.5); text-align: center; color:black;
+    //     p {
+    //         position: absolute; margin: 0 auto; top: 50%; left: 0; right: 0;color: white;
+    //         i { vertical-align: middle; }
+    //     }
+    // }
+    // .hide{ display: none; }
     .goods-details{
         margin-top:	 1.2rem;
         width: 100%;
@@ -107,72 +157,69 @@ export default {
                 min-height: 400px;
                 img{ width: 100% }
             }
+            .goods-cont{
+                box-sizing: border-box;
+                padding: .313725rem .784314rem;
+                position: relative;
+                text-align: left;
+                h3{ width: 75%; text-align: justify; line-height: 1.3em; text-indent: 2em }
+                .goods-price {
+                    p {
+                        font-size: .8em;
+                        color: #ff901c;
+                        height: .784314rem;
+                        margin-top: .235294rem;
+                        i{
+                            display: inline-block;
+                            background: url('../assets/images/icon2.png') no-repeat;
+                            background-size: 11.38827rem 1.469933rem;
+                            background-position: 0 0;
+                            vertical-align: middle;	
+                            width: .470588rem;
+                            height: .470588rem;
+                        }
+                        span{ font-size: 2em }
+                    }
+                }
+                > p{
+                    color: #888;
+                    font-size: .8em;
+                    margin-top: .156863rem;
+                }
+                .freight{ float: right }
+                .custom-serve{
+                    position: absolute;
+                    padding: 3em 0;
+                    color:	#ff901c;
+                    font-size: .8em;
+                    top: 0;
+                    right: 30px;
+                    span {
+                        border:.014848rem solid #ff901c;
+                        border-radius: 1em;
+                        padding: 8px 25px;
+                    }
+                }
+            }
         }
-        
-
+        // 购物车按钮
+        .buy-btn{
+            width: 100%;
+            background: url('../assets/images/cart_btn.jpg') no-repeat;
+            background-size: 10.039216rem .972549rem;
+            height: .972549rem;
+            a{
+                display: inline-block;
+                height: .972549rem;
+                line-height: .972549rem;
+                width: 48%;
+                text-align: center;
+                color:white;
+            }
+        }
     }
 
-    // .goods-show .goods-cont{
-    //     box-sizing: border-box;
-    //     padding: .313725rem .784314rem;
-    //     position: relative;
-    // }
-    // .goods-cont .custom-serve{
-    //     position: absolute;
-    //     padding: .235294rem 0;
-    //     color:	#ff901c;
-    //     font-size: 12px;
-    //     top: .627451rem;
-    //     right: .470588rem;
-    // }
-    // .custom-serve span{
-    //     border:1px solid #ff901c;
-    //     border-radius: .313725rem;
-    //     padding: .047059rem .313725rem;
-    // }
-    // .goods-cont h3{ width: 75% }
-    // .goods-price p{
-    //     font-size: 12px;
-    //     color: #ff901c;
-    //     height: .784314rem;
-    //     margin-top: .235294rem; 
-    // }
-    // .goods-price  p b{ font-size: 14px }
-    // .goods-price span{ font-size: 20px }
-    // .goods-price p i{
-    //     display: inline-block;
-    //     background: url('..assets/images/icon2.png') no-repeat;
-    //     background-size: 11.38827rem 1.469933rem;
-    //     background-position: 0 0;
-    //     vertical-align: bottom;	
-    //     width: .470588rem;
-    //     height: .470588rem;
-    // }
-
-    // .goods-price p span:nth-child(3){ color: red }
-    // .goods-cont>p{
-    //     color: #888;
-    //     font-size: 12px;
-    //     margin-top: .156863rem;
-    // }
-    // .goods-cont .freight{ float: right }
-
-    // /* 购物车按钮 */
-    // .buy-btn{
-    //     width: 100%;
-    //     background: url('..assets/images/cart-btn.jpg') no-repeat;
-    //     background-size: 10.039216rem .972549rem;
-    //     height: .972549rem;
-    // }
-    // .buy-btn a{
-    //     display: inline-block;
-    //     height: .972549rem;
-    //     line-height: .972549rem;
-    //     width: 48%;
-    //     text-align: center;
-    //     color:white;
-    // }
-    /* 商品信息 */
+    /* 商品展示 */
     section{
         width: 100%;
         box-sizing: border-box;

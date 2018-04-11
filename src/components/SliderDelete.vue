@@ -1,11 +1,14 @@
 <template>
-<div class="delete">
-    <div class="slider" @touchstart='touchStart' @touchmove='touchMove' @touchend='touchEnd'>
-        <div class="content"  :style="deleteSlider">
+<div class="delete" >
+    <div v-for="(v,k) in list" :key="k" :name="k" :id="k"
+        :class="['slider', {'left-slider': showDelBtn==k}]" 
+        @touchstart='touchStart' @touchmove='touchMove' @touchend='touchEnd'>
+        <div class="content" >
     <!-- 插槽中放具体项目中需要内容         -->   
-        <slot name="content"> </slot>
+        <slot name="content">
+        </slot>
         </div>
-        <div class="remove" ref='remove' > <span>删除</span> </div>
+        <div class="remove" ref="remove" @click.stop="handleClick()"> <span>删除</span> </div>
     </div>
 </div>
 </template>
@@ -15,69 +18,64 @@ export default {
     name: 'SliderDelete',
     data() {
         return {
-            startX:0,   //触摸位置
-            endX:0,     //结束位置
-            moveX: 0,   //滑动时的位置
-            disX: 0,    //移动距离
-            deleteSlider: '',//滑动时的效果,使用v-bind:style="deleteSlider"
+            start: {X:0, Y:0},   //触摸位置
+            deleteBlock: {X:0, Y:0}, //删除按钮的尺寸
+            showDelBtn: -1,     //是否显示删除按钮
+            targetTouch: '',
+            lastTouch: '',
+            list: [12,13,15]
         }
     },
     methods:{
         touchStart(ev){
             ev= ev || event
             //tounches类数组，等于1时表示此时有只有一只手指在触摸屏幕
+            // console.log(ev.currentTarget)
             if (ev.touches.length == 1) {
-                // 记录开始位置
-                this.startX = ev.touches[0].clientX;
+                this.start = { X: ev.touches[0].clientX, Y: ev.touches[0].clientY }
+                this.lastTouch = this.targetTouch;
+                this.targetTouch = ev.currentTarget;
+                this.deleteBlock = {
+                        X: (this.$refs.remove[0].offsetWidth), 
+                        Y: (this.$refs.remove[0].offsetHeight)
+                    };
             }
         },
         touchMove(ev){
             ev = ev || event;
-                //获取删除按钮的宽度，此宽度为滑块左滑的最大距离
-            let wd=this.$refs.remove.offsetWidth;
                 if(ev.touches.length == 1) {
-                    // 滑动时距离浏览器左侧实时距离
-                    console.log(ev.touches[0])
-                    this.moveX = ev.touches[0].clientX
-            
-                    //起始位置减去 实时的滑动的距离，得到手指实时偏移距离
-                    this.disX = this.startX - this.moveX;
-                    // console.log(this.disX)
-                    // 如果是向右滑动或者不滑动，不改变滑块的位置
-                    if(this.disX < 0 || this.disX == 0) {
-                        this.deleteSlider = "marginLeft:0px";
-                    // 大于0，表示左滑了，此时滑块开始滑动 
-                    }else if (this.disX > 0) {
-                            //具体滑动距离我取的是 手指偏移距离*5。
-                        this.deleteSlider = "marginLeft:-" + this.disX + "px";
-                        
-                        // 最大也只能等于删除按钮宽度 
-                        if (this.disX*5 >=wd) {
-                            this.deleteSlider = "marginLeft:-" +wd+ "px";
-                            
-                        }
-                    }
+                    
                 }
             },
         touchEnd(ev){
             ev = ev || event;
-            let wd=this.$refs.remove.offsetWidth;
-            if (ev.changedTouches.length == 1) {
-                let endX = ev.changedTouches[0].clientX;
+                if(this.lastTouch != this.targetTouch && this.showDelBtn != -1) { 
+                    //若上一个左滑项与当前触摸项不是同一个。上一个左滑项右滑，不再显示删除按钮
+                    this.showDelBtn = -1; 
+                }    
+                if (ev.changedTouches.length == 1) {
+                    let end = {
+                            X: ev.changedTouches[0].clientX,
+                            Y: ev.changedTouches[0].clientY
+                        }; 
+                    let dis = { 
+                            X: end.X - this.start.X,   
+                            Y: Math.abs(end.Y - this.start.Y)  
+                        };
+                    if (dis.Y < 3*(this.deleteBlock.Y)/4) {         //结束时上下移动距离不超过删除按钮宽度的2/3，视为左滑动作
+                        let index = ev.currentTarget.getAttribute('name');
 
-                    this.disX = this.startX - endX;
-                    console.log(this.disX)
-                    //如果距离小于删除按钮一半,强行回到起点
-                    
-                    if ((this.disX*5) < (wd/2)) {
-                        
-                        this.deleteSlider = "marginLeft:0px";
-                    }else{
-                        //大于一半 滑动到最大值
-                            this.deleteSlider = "marginLeft:-"+wd+ "px";
+                        if(dis.X<0 && Math.abs(dis.X) > (this.deleteBlock.X)/2 ){        //左滑满足条件
+                            this.showDelBtn = index
+                        } else if (dis.X>0 && dis.X > (this.deleteBlock.X)/2 && this.showDelBtn==index ){           //向右滑动
+                            this.showDelBtn = -1
+                        }       
                     }
                 }
-            }      
+            },    
+        handleClick() {
+            console.log(10)
+        }  
     }
      
 
@@ -94,7 +92,7 @@ export default {
             box-sizing: border-box;
     .slider{
         width: 130%;
-        height:200px;
+        height:auto;
         display: -webkit-box;
         display: -ms-flexbox;
         display: flex;
@@ -107,11 +105,10 @@ export default {
                 flex-flow: row nowrap;
         -webkit-transition: 0.3s;
             transition: 0.3s;        
-        // margin-left: -30%;
         .content{
             display: inline-block;
             width: 100%;
-            height: 100%;
+            min-height: 200px;
             -webkit-box-sizing: border-box;
                     box-sizing: border-box; 
             background-color: green;
@@ -119,7 +116,7 @@ export default {
         .remove{
             display: inline-block;
             width: 30%;
-            height:100%;
+            height:200px;
             background:red;
             color:#fff;
             text-align: center;
@@ -133,6 +130,9 @@ export default {
                 left: 0;
             }
         }
+    }
+    .left-slider {
+        margin-left: -30%;
     }
 }
 </style>

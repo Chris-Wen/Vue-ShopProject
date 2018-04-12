@@ -107,3 +107,17 @@ export const commitDemand = ({commit, state}, payload) => {
             }).catch( err => reject(err) )
     })
 }
+
+
+export const getCartList = ({commit, state}, payload) => {
+    return new Promise((resolve, reject) => {
+        axios.get('/getCart')
+            .then( response => {
+                console.log(response);
+                if (response.data.code == 200) {
+                    state.cartData = response.array
+                }
+                resolve(response.data.code)
+            }).catch( err => reject(err) )
+    })
+}

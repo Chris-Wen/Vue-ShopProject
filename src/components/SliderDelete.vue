@@ -1,29 +1,29 @@
 <template>
-<div class="delete" >
-    <div v-for="(v,k) in list" :key="k" :name="k" :id="k"
-        :class="['slider', {'left-slider': showDelBtn==k}]" 
-        @touchstart='touchStart' @touchmove='touchMove' @touchend='touchEnd'>
-        <div class="content" >
-    <!-- 插槽中放具体项目中需要内容         -->   
-        <slot name="content">
-        </slot>
+    <div class="delete" >
+        <div  v-for="(v,k) in list"  :key="k" name="k"
+            :class="['slider', {'left-slider': showDelBtn==k}]" 
+            @touchstart='touchStart'  @touchend='touchEnd'>
+            <div class="content" >
+        <!-- 插槽中放具体项目中需要内容         -->   
+               <!--   <slot></slot>     默认插槽 -->
+                <slot name="content"></slot> <!--  根据需要的命名插槽 -->
+            </div>
+            <div class="remove" ref="remove" @click.stop="deleteItem(k)"><span> 删除</span></div>
         </div>
-        <div class="remove" ref="remove" @click.stop="handleClick()"> <span>删除</span> </div>
     </div>
-</div>
 </template>
 
 <script>
 export default {
     name: 'SliderDelete',
+    props: [ 'list' ],
     data() {
         return {
-            start: {X:0, Y:0},   //触摸位置
-            deleteBlock: {X:0, Y:0}, //删除按钮的尺寸
-            showDelBtn: -1,     //是否显示删除按钮
+            start: {X:0, Y:0},          //触摸位置
+            deleteBlock: {X:0, Y:0},    //删除按钮的尺寸
+            showDelBtn: -1,             //是否显示删除按钮
             targetTouch: '',
-            lastTouch: '',
-            list: [12,13,15]
+            lastTouch: ''
         }
     },
     methods:{
@@ -41,12 +41,6 @@ export default {
                     };
             }
         },
-        touchMove(ev){
-            ev = ev || event;
-                if(ev.touches.length == 1) {
-                    
-                }
-            },
         touchEnd(ev){
             ev = ev || event;
                 if(this.lastTouch != this.targetTouch && this.showDelBtn != -1) { 
@@ -62,7 +56,7 @@ export default {
                             X: end.X - this.start.X,   
                             Y: Math.abs(end.Y - this.start.Y)  
                         };
-                    if (dis.Y < 3*(this.deleteBlock.Y)/4) {         //结束时上下移动距离不超过删除按钮宽度的2/3，视为左滑动作
+                    if (dis.Y < 3*(this.deleteBlock.Y)/4) {         //结束时上下移动距离不超过删除按钮宽度的2/3，视为有效动作
                         let index = ev.currentTarget.getAttribute('name');
 
                         if(dis.X<0 && Math.abs(dis.X) > (this.deleteBlock.X)/2 ){        //左滑满足条件
@@ -73,8 +67,8 @@ export default {
                     }
                 }
             },    
-        handleClick() {
-            console.log(10)
+        deleteItem(index) {
+            this.$emit('handleDelete', index)
         }  
     }
      
@@ -93,22 +87,22 @@ export default {
     .slider{
         width: 130%;
         height:auto;
+        min-height: 200px;
         display: -webkit-box;
         display: -ms-flexbox;
         display: flex;
-        // -webkit-box-align: center;
-        //     -ms-flex-align: center;
-        //         align-items: center;
+        -webkit-box-align: stretch;
+        -ms-flex-align: stretch;
+            align-items: stretch;
         -webkit-box-orient: horizontal;
         -webkit-box-direction: normal;
             -ms-flex-flow: row nowrap;
                 flex-flow: row nowrap;
-        -webkit-transition: 0.3s;
-            transition: 0.3s;        
+        -webkit-transition: all 0.3s linear;
+            transition: all 0.3s linear;        
         .content{
             display: inline-block;
             width: 100%;
-            min-height: 200px;
             -webkit-box-sizing: border-box;
                     box-sizing: border-box; 
             background-color: green;
@@ -116,11 +110,10 @@ export default {
         .remove{
             display: inline-block;
             width: 30%;
-            height:200px;
             background:red;
             color:#fff;
             text-align: center;
-            font-size: 1.5em;
+            font-size: 1.4em;
             position: relative;
             span {
                 position: absolute;

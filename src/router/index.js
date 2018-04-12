@@ -7,6 +7,7 @@ import Personal from '@/views/Personal'
 import List from '@/views/List'
 import Details from '@/views/Details'
 import OrderConfirm from '@/views/OrderConfirm'
+import Cart from '@/views/Cart'
 
 
 
@@ -42,6 +43,10 @@ export default new Router({
     {
       path:'/orderconfirm/:pid',
       component: OrderConfirm
+    },
+    {
+      path:'/cart',
+      component: Cart
     },
     {
       path: '/test',

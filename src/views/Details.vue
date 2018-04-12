@@ -1,10 +1,7 @@
 <template>
     <div class="container">
         <!--商品展示-->
-        <!-- <div :class="[showLoading ? 'mask' : 'hide']" >
-            <p><i class="fa fa-spinner fa-spin fa-2x"></i> &nbsp;玩命加载中</p> 
-        </div> -->
-        <Loading :showLoading="isShow"/>
+        <loading :showLoading="isShow"/>
         <cube-popup type="my-popup" :mask="true" :content="popupMsg" ref="myPopup" />
 		<div class="goods-details">
 			<div class="goods-show">
@@ -44,7 +41,7 @@
 </template>
 
 <script>
-import Loading from '../components/Loading'
+import loading from '../components/Loading'
 import { mapActions } from 'vuex'
 
 export default {
@@ -64,7 +61,7 @@ export default {
             defaultImg: `this.src="${require("../assets/images/bg_img.jpg")}"`
         }
     },
-    components: { Loading },
+    components: { loading },
     methods:{
         showPopup(refId, payload) {
             const component = this.$refs[refId]

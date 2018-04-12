@@ -92,7 +92,7 @@
 </template>
 
 <script>
-//mapActions   即为升级版 mapMutations， 一般只需引入mapActions即可
+//mapActions   即为升级版 mapMutations， 
 import { mapMutations, mapActions } from 'vuex'
 import Banner from '../components/Banner'
 

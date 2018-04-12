@@ -1,14 +1,12 @@
 <template>
-    <div class="delete" >
-        <div  v-for="(v,k) in list"  :key="k" name="k"
-            :class="['slider', {'left-slider': showDelBtn==k}]" 
+    <div class="delete">
+        <div :class="['slider', {'left-slider': showDelBtn}]" 
             @touchstart='touchStart'  @touchend='touchEnd'>
             <div class="content" >
         <!-- 插槽中放具体项目中需要内容         -->   
-               <!--   <slot></slot>     默认插槽 -->
-                <slot name="content"></slot> <!--  根据需要的命名插槽 -->
+                 <slot></slot>
             </div>
-            <div class="remove" ref="remove" @click.stop="deleteItem(k)"><span> 删除</span></div>
+            <div class="remove" ref="remove" @click.stop="deleteItem(index)"><span> 删除</span></div>
         </div>
     </div>
 </template>
@@ -16,14 +14,15 @@
 <script>
 export default {
     name: 'SliderDelete',
-    props: [ 'list' ],
+    props: ['index'],
     data() {
         return {
             start: {X:0, Y:0},          //触摸位置
             deleteBlock: {X:0, Y:0},    //删除按钮的尺寸
-            showDelBtn: -1,             //是否显示删除按钮
+            showDelBtn: false,          //是否显示删除按钮
             targetTouch: '',
-            lastTouch: ''
+            lastTouch: '',
+            list: []
         }
     },
     methods:{
@@ -33,20 +32,20 @@ export default {
             // console.log(ev.currentTarget)
             if (ev.touches.length == 1) {
                 this.start = { X: ev.touches[0].clientX, Y: ev.touches[0].clientY }
-                this.lastTouch = this.targetTouch;
-                this.targetTouch = ev.currentTarget;
+                // this.lastTouch = this.targetTouch;
+                // this.targetTouch = ev.currentTarget;
                 this.deleteBlock = {
-                        X: (this.$refs.remove[0].offsetWidth), 
-                        Y: (this.$refs.remove[0].offsetHeight)
+                        X: (this.$refs.remove.offsetWidth), 
+                        Y: (this.$refs.remove.offsetHeight)
                     };
             }
         },
         touchEnd(ev){
             ev = ev || event;
-                if(this.lastTouch != this.targetTouch && this.showDelBtn != -1) { 
-                    //若上一个左滑项与当前触摸项不是同一个。上一个左滑项右滑，不再显示删除按钮
-                    this.showDelBtn = -1; 
-                }    
+                // if(this.lastTouch != this.targetTouch && this.showDelBtn ) { 
+                //     //若上一个左滑项与当前触摸项不是同一个。上一个左滑项右滑，不再显示删除按钮
+                //     this.showDelBtn = false; 
+                // }    
                 if (ev.changedTouches.length == 1) {
                     let end = {
                             X: ev.changedTouches[0].clientX,
@@ -57,12 +56,10 @@ export default {
                             Y: Math.abs(end.Y - this.start.Y)  
                         };
                     if (dis.Y < 3*(this.deleteBlock.Y)/4) {         //结束时上下移动距离不超过删除按钮宽度的2/3，视为有效动作
-                        let index = ev.currentTarget.getAttribute('name');
-
                         if(dis.X<0 && Math.abs(dis.X) > (this.deleteBlock.X)/2 ){        //左滑满足条件
-                            this.showDelBtn = index
-                        } else if (dis.X>0 && dis.X > (this.deleteBlock.X)/2 && this.showDelBtn==index ){           //向右滑动
-                            this.showDelBtn = -1
+                            this.showDelBtn = true
+                        } else if (dis.X>0 && dis.X > (this.deleteBlock.X)/2 && this.showDelBtn ){       //向右滑动
+                            this.showDelBtn = false
                         }       
                     }
                 }

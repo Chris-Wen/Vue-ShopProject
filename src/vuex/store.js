@@ -32,7 +32,7 @@ const  state = {
 		ruleList3: [],
 		ruleList4: []
 	},
-	cartData: [1]
+	cartData: []
 }
 
 //store

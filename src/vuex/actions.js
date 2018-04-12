@@ -115,7 +115,7 @@ export const getCartList = ({commit, state}, payload) => {
             .then( response => {
                 console.log(response);
                 if (response.data.code == 200) {
-                    state.cartData = response.array
+                    state.cartData = response.data.array
                 }
                 resolve(response.data.code)
             }).catch( err => reject(err) )

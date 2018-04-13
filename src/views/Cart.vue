@@ -45,6 +45,7 @@ export default {
         })
     },
     mounted() {
+        console.log(this.$store.state.cartData)
         this.handleTitle({
             title: this.titleInfo.title,
             showIcon: this.titleInfo.showIcon

@@ -1,12 +1,11 @@
 <template>
     <div class="delete" >
-        <div  v-for="(v,k) in list"  :key="k" name="k"
-            :class="['slider', {'left-slider': showDelBtn==k}]" 
+        <div  v-for="(v,k) in list"  :key="k" :name="k" :class="['slider', {'left-slider': showDelBtn==k}]" 
             @touchstart='touchStart'  @touchend='touchEnd'>
             <div class="content" >
         <!-- 插槽中放具体项目中需要内容         -->   
                <!--   <slot></slot>     默认插槽 -->
-                <slot name="content"></slot> <!--  根据需要的命名插槽 -->
+                <slot name="content" :val="v"></slot> <!--  根据需要的命名插槽 -->
             </div>
             <div class="remove" ref="remove" @click.stop="deleteItem(k)"><span> 删除</span></div>
         </div>
@@ -105,7 +104,6 @@ export default {
             width: 100%;
             -webkit-box-sizing: border-box;
                     box-sizing: border-box; 
-            background-color: green;
         }
         .remove{
             display: inline-block;
